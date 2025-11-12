@@ -14,6 +14,8 @@ things to consider:
 2) if email/phone contact is set then should it be verified and how
 3) how should images be validated to have the appropriate size and format
 4) setting auto-expiration for posts
+5) create child post models
+
 '''
 
 
