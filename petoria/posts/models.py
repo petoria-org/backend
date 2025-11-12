@@ -17,7 +17,7 @@ class Post(models.Model):
     
     description = RichTextField()
     
-    award = models.IntegerField(  # Fixed: lowercase 'award' (Python convention)
+    award = models.IntegerField(
         max_digits=12, 
         validators=[
             MinValueValidator(10000, message="Award must be at least 10000")
