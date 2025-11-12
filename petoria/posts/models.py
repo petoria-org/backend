@@ -1,56 +1,61 @@
 from django.db import models
-from cheditor.fields import RichTextField
+from ckeditor.fields import RichTextField
 from django.utils.text import slugify
 from django.urls import reverse
-from djando.contrib.auth.models import users  # custom user
+from django.contrib.auth.models import users  # custom user
+from django.core.validators import RegexValidator, MinValueValidator
 # from embed_video.fields import EmbedvideoField
-from django.core.validators import RegexValidator
-
-
-class User(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_pic = models.ImageField(default='default-profile-pic.png', upload_to='upload/profile_pictures', null=True)
-    phone = models.CharField(max_length=11, null=True, blank=True)  # Not mandatory.
-
-    def __str__(self):
-        return self.user.username
 
 
 class Post(models.Model):
-    # CONDITION = ()
-
-    author = models.Foreignkey(Author, on_delete=models.CASCADE)
-    title = models.CharField(max_length=180)
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE
+        )
+    
+    title = models.CharField(max_length=80)
+    
     description = RichTextField()
-    Award = models.DecimalField(max_digits=8, decimal_places=2)  # 999,999.99
-    date_created = DateTimeField(auto_now_add=True)
-    state = models.ForeignKey('State', on_delete=models.PROTECT, null=False, related_name='ads')
-    city = models.Foreignkey('City', on_delete=models.PROTECT, null=False, related_name='ads')
-    category = models.ForeignKey('Category', on_delete=models.PROTECT, null=True, related_name='ads')
+    
+    award = models.IntegerField(  # Fixed: lowercase 'award' (Python convention)
+        max_digits=12, 
+        validators=[
+            MinValueValidator(10000, message="Award must be at least 10000")
+        ]
+    )
+    
+    date_created = models.DateTimeField(auto_now_add=True)
+    
+    phone = models.CharField(
+        max_length=11,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r'^09[0-9]{9}$',
+                message="Phone must start with 09 and contain 11 digits total."
+            )
+        ]
+    )
+    
+    # CONDITION = ()
+    # state = models.ForeignKey('State', on_delete=models.PROTECT, null=False, related_name='posts')
+    # category = models.ForeignKey('Category', on_delete=models.PROTECT, null=True, related_name='posts')
     # condition = models.CharField(max_length=100, choices=CONDITION)
-    phone = models.CharField(max_length=50, validators=[
-    RegexValidator(regex=r'^\+?\d{10,15}$', message="The contact number is not valid")])
     ### is_featured = models.BooleanField(default=False)
 
 
-class state(models.Model):
-    state_name = models.CharField(max_length=100)
-    slug = models.SlugField(blank=True, null=True)
-    def save(self, *args, **kwargs):
-        if not self.slug and self.state_name:
-            self.slug = slugify(self.state_name)
-        super().save(*args, **kwargs)
+# class state(models.Model):
+#     state_name = models.CharField(max_length=100)
+#     slug = models.SlugField(blank=True, null=True)
+#     def save(self, *args, **kwargs):
+#         if not self.slug and self.state_name:
+#             self.slug = slugify(self.state_name)
+#         super().save(*args, **kwargs)
 
 
-class City(models.Model):
+# class Category(models.Model):
+#     pass
 
-
-# ,,,
-
-class Category(models.Model):
-
-
-# ,,,
-
-class AdsImages(models.Model):
-# ,,,
+# class PostsImages(models.Model):
+#     pass
