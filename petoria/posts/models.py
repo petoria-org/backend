@@ -90,7 +90,13 @@ class BasePost(models.Model):
         blank=True,
         help_text=_("Longitude for map positioning")
     )
+
+    location_radius = models.PositiveIntegerField(
+        default=10,
+        help_text="Search radius in kilometers"
+    )
     
+
     # === CONTACT ===
     contact_phone = models.CharField(
         max_length=11,
