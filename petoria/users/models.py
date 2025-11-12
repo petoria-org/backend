@@ -68,13 +68,6 @@ class User(AbstractUser):
         default=True,
         help_text="Receive email notifications about posts and messages"
     )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['email']),
-            models.Index(fields=['google_id']),
-            models.Index(fields=['location']),
-        ]
     
     def __str__(self):
         return f"{self.username}"
@@ -120,7 +113,7 @@ class User(AbstractUser):
         return bool(self.phone or self.is_email_verified)
 
 class UserLocation(models.Model):
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name='location'
