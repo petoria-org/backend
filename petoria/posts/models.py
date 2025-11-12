@@ -69,33 +69,23 @@ class BasePost(models.Model):
         help_text=_("Name of the pet (if known)")
     )
     
-    # === LOCATION ===
-    address = models.CharField(
-        max_length=200,
-        help_text=_("Street address, neighborhood, or area")
-    )
-
-    latitude = models.DecimalField(
-        max_digits=9, 
-        decimal_places=6,
-        null=True,
+    # === Location for Map Integration ===
+    location = models.CharField(
+        max_length=255,
         blank=True,
-        help_text=_("Latitude for map positioning")
+        help_text="Neighborhood or area name"
     )
     
-    longitude = models.DecimalField(
-        max_digits=9, 
-        decimal_places=6,
+    location_point = models.PointField(
         null=True,
         blank=True,
-        help_text=_("Longitude for map positioning")
+        help_text="Exact map coordinates"
     )
-
+    
     location_radius = models.PositiveIntegerField(
         default=10,
-        help_text="Search radius in kilometers"
+        help_text="Search radius in kilometers for pet matches"
     )
-    
 
     # === CONTACT ===
     contact_phone = models.CharField(

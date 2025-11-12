@@ -54,12 +54,23 @@ class User(AbstractUser):
     )
     
     # === Location for Map Integration ===
-    location = models.CharField(max_length=255, blank=True, help_text="Neighborhood or area name")
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Map coordinate")
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Map coordinate")
-    location_radius = models.PositiveIntegerField(default=10, help_text="Search radius in kilometers for pet matches")
+    location = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Neighborhood or area name"
+    )
     
+    location_point = models.PointField(
+        null=True,
+        blank=True,
+        help_text="Exact map coordinates"
+    )
     
+    location_radius = models.PositiveIntegerField(
+        default=10,
+        help_text="Search radius in kilometers for pet matches"
+    )
+
     # === Google Authentication ===
     google_id = models.CharField(
         max_length=100, 
