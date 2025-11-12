@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.contrib.gis.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
+
 
 class User(AbstractUser):
     
@@ -51,24 +52,6 @@ class User(AbstractUser):
         max_length=500, 
         blank=True,
         help_text="Brief introduction about yourself and your experience with pets"
-    )
-    
-    # === Location for Map Integration ===
-    location = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Neighborhood or area name"
-    )
-    
-    location_point = models.PointField(
-        null=True,
-        blank=True,
-        help_text="Exact map coordinates"
-    )
-    
-    location_radius = models.PositiveIntegerField(
-        default=10,
-        help_text="Search radius in kilometers for pet matches"
     )
 
     # === Google Authentication ===
@@ -135,6 +118,17 @@ class User(AbstractUser):
         Check if user has provided sufficient contact information
         """
         return bool(self.phone or self.is_email_verified)
+
+class UserLocation(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='location'
+    )
+    point = models.PointField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
 class EmailVerification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_verification')

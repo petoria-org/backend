@@ -1,11 +1,12 @@
-from django.db import models
+from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from users.models import User
 from .enums import PetType, AgeEstimate, Gender, ContactMethod, PostStatus
-from django.core.validators import RegexValidator
-
+from django.core.validators import RegexValidator, MinValueValidator
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 '''
 things to consider: 
@@ -68,24 +69,6 @@ class BasePost(models.Model):
         blank=True,
         help_text=_("Name of the pet (if known)")
     )
-    
-    # === Location for Map Integration ===
-    location = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Neighborhood or area name"
-    )
-    
-    location_point = models.PointField(
-        null=True,
-        blank=True,
-        help_text="Exact map coordinates"
-    )
-    
-    location_radius = models.PositiveIntegerField(
-        default=10,
-        help_text="Search radius in kilometers for pet matches"
-    )
 
     # === CONTACT ===
     contact_phone = models.CharField(
@@ -134,6 +117,18 @@ class BasePost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(
         help_text=_("When this post automatically expires")
+    )
+    
+    award = models.IntegerField(
+        max_digits=12, 
+        validators=[
+            MinValueValidator(10000, message="Award must be at least 10000")
+        ]
+    )
+
+    locations = GenericRelation(
+        'PostLocation',                # model name as string
+        related_query_name='posts'     # lets you do PostLocation.objects.filter(posts__user=...)
     )
     
     class Meta:
@@ -192,6 +187,19 @@ class BasePost(models.Model):
             
         return methods
 
+class PostLocation(models.Model):
+    # Generic foreign key setup
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    post = GenericForeignKey('content_type', 'object_id')
+    
+    # Location data
+    point = models.poin
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Location for {self.post}"
 
 # class Post(models.Model):
 #     author = models.ForeignKey(
@@ -202,13 +210,6 @@ class BasePost(models.Model):
 #     title = models.CharField(max_length=80)
     
 #     description = RichTextField()
-    
-#     award = models.IntegerField(
-#         max_digits=12, 
-#         validators=[
-#             MinValueValidator(10000, message="Award must be at least 10000")
-#         ]
-#     )
     
 #     date_created = models.DateTimeField(auto_now_add=True)
     
