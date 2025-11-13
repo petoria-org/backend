@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,16 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
 
+    # third parties
+    'rest_framework',
+    'django_extensions',
+    'channels',
+
     # internal apps
     'chat',
     'posts',
     'users',
     'locations',
-
-    # third parties
-    'rest_framework',
-    'django_extensions',
-    'channels'
 ]
 
 MIDDLEWARE = [
@@ -78,8 +79,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'petoria.wsgi.application'
 ASGI_APPLICATION = 'petoria.asgi.application'
+WSGI_APPLICATION = 'petoria.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

@@ -76,7 +76,7 @@ class BasePost(models.Model):
         help_text=_("Type of pet")
     )
 
-    sex = models.CharField(
+    pet_sex = models.CharField(
         max_length=10,
         choices=Gender.choices,
         default=Gender.UNKNOWN,
