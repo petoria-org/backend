@@ -1,9 +1,9 @@
 from django.db import models
 from users.models import User
-from django.db.models import (Model, TextField, DateTimeField, ForeignKey,CASCADE)
 from django.utils import timezone
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
+
+# from asgiref.sync import async_to_sync
+# from channels.layers import get_channel_layer
 
 
 class Chat(models.Model):
