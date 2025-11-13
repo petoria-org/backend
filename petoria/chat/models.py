@@ -20,6 +20,10 @@ class Chat(models.Model):
     def __str__(self):
         return f"Chat {self.id} about Post {self.post_id if self.post else 'N/A'}"
 
+    def is_private(self):
+        """Return True if chat has exactly two participants."""
+        return self.participants.count() == 2
+    
 
 class Message(models.Model):
     
