@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import RegexValidator, MinValueValidator
 from users.models import User
-from .enums import PetType, AgeEstimate, Gender, ContactMethod, PostStatus
+from .enums import PetType, Gender, ContactMethod, PostStatus
 from locations.models import Location
 
 
@@ -16,7 +16,7 @@ to do list:
 
 Base Post:
 
-1) make a default for title (probably in save method)
+1) decide if lost and found should be separate
 
 2) make image verifications (size, format, ....)
 
@@ -26,6 +26,9 @@ Base Post:
    + make sure they can set it to null 
 
 5) create lost, found, adopt posts
+
+6) make a default for title (probably in save method)
+
 '''
 
 
@@ -139,6 +142,12 @@ class BasePost(models.Model):
             methods.append(ContactMethod.EMAIL)
 
         return methods
+
+class LostFoundPost(BasePost):
+    pass
+
+class AdaptionPost(BasePost):
+    pass
 
 
     # breed = models.CharField(

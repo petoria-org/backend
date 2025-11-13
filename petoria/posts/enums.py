@@ -12,13 +12,6 @@ class PetType(models.TextChoices):
     SMALL_ANIMAL = 'small_animal', _('Small Animal')
     OTHER = 'other', _('Other')
 
-class AgeEstimate(models.TextChoices):
-    BABY = 'baby', _('Baby (0-1 year)')
-    YOUNG = 'young', _('Young (1-3 years)')
-    ADULT = 'adult', _('Adult (3-8 years)')
-    SENIOR = 'senior', _('Senior (8+ years)')
-    UNKNOWN = 'unknown', _('Unknown')
-
 class Gender(models.TextChoices):
     MALE = 'male', _('Male')
     FEMALE = 'female', _('Female')
@@ -34,3 +27,8 @@ class PostStatus(models.TextChoices):
     ACTIVE = 'active', _('Active')
     RESOLVED = 'resolved', _('Resolved')
     EXPIRED = 'expired', _('Expired')
+
+class PostType(models.TextChoices):
+    LOST = 'lost', _('Lost')
+    FOUND = 'found', _('Found')
+    ADOPTION = 'adoption', _('Adoption')
