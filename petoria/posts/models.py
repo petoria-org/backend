@@ -3,13 +3,11 @@ from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import RegexValidator, MinValueValidator
-
 from users.models import User
 from .enums import PetType, AgeEstimate, Gender, ContactMethod, PostStatus
-
+from locations.models import Location
 
 class BasePost(models.Model):
     # === CORE POST INFORMATION ===
@@ -84,6 +82,7 @@ class BasePost(models.Model):
         blank=True,
         help_text=_("Email for direct contact (optional)")
     )
+
     preferred_contact = models.CharField(
         max_length=10,
         choices=ContactMethod.choices,
@@ -110,22 +109,26 @@ class BasePost(models.Model):
         on_delete=models.CASCADE,
         related_name='%(class)ss'
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
+    
     updated_at = models.DateTimeField(auto_now=True)
+    
     expires_at = models.DateTimeField(
         help_text=_("When this post automatically expires")
     )
 
-    # Use a big integer to allow large award values (no max_digits param on IntegerField)
     award = models.PositiveBigIntegerField(
         validators=[MinValueValidator(10000, message="Award must be at least 10000")]
     )
 
-    # GenericRelation provides a reverse accessor from the post to its PostLocation(s).
-    # We'll keep the name 'location' but note it returns a manager (queryset). Use helper below to get the single instance.
-    location = GenericRelation(
-        'PostLocation',
-        related_query_name='posts'
+    # === Location ===
+    location = models.OneToOneField(
+        Location,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='post'
     )
 
     class Meta:
@@ -183,50 +186,6 @@ class BasePost(models.Model):
             methods.append(ContactMethod.EMAIL)
 
         return methods
-
-    # --- helpers to treat the GenericRelation as a single location ---
-    @property
-    def location_instance(self):
-        """Return the single PostLocation instance or None"""
-        return self.location.first()
-
-    def set_location(self, point):
-        """
-        Create or update the single PostLocation for this post.
-        `point` should be a GEOSPoint or a WKT string like 'POINT(lon lat)'.
-        """
-        if not self.pk:
-            # Ensure post is saved before linking location
-            raise ValueError("Save post before creating/updating its location.")
-        PostLocation.objects.update_or_create(
-            content_type=ContentType.objects.get_for_model(self.__class__),
-            object_id=self.pk,
-            defaults={'point': point}
-        )
-
-
-class PostLocation(models.Model):
-    # Generic foreign key setup
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    post = GenericForeignKey('content_type', 'object_id')
-
-    # Location data
-    point = models.PointField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        # Ensure only one location per post (content_type + object_id)
-        constraints = [
-            models.UniqueConstraint(
-                fields=['content_type', 'object_id'],
-                name='post_location'
-            )
-        ]
-
-    def __str__(self):
-        return f"Location for {self.post}"
 
 
 # class Post(models.Model):

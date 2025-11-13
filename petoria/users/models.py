@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
+from locations.models import Location
 
 
 class User(AbstractUser):
@@ -69,6 +70,16 @@ class User(AbstractUser):
         help_text="Receive email notifications about posts and messages"
     )
     
+
+    # === Location ===
+    location = models.OneToOneField(
+        Location,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user'
+    )
+
     def __str__(self):
         return f"{self.username}"
 
@@ -111,16 +122,6 @@ class User(AbstractUser):
         Check if user has provided sufficient contact information
         """
         return bool(self.phone or self.is_email_verified)
-
-class UserLocation(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='location'
-    )
-    point = models.PointField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
 
 class EmailVerification(models.Model):
