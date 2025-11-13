@@ -3,7 +3,8 @@ from django.contrib.gis.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from locations.models import Location
-
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
 
 class User(AbstractUser):
     
@@ -41,8 +42,11 @@ class User(AbstractUser):
     )
     
     # === Profile Information ===
-    profile_picture = models.ImageField(
+    profile_picture = ProcessedImageField(
         upload_to='profile_pics/',
+        format='JPEG',
+        options={'quality': 100},
+        #processors=[ResizeToFill(300, 300)],
         null=True, 
         blank=True,
         default='profile_pics/default_avatar.png',
