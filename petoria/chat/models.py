@@ -8,13 +8,13 @@ from django.utils import timezone
 
 class Chat(models.Model):
     participants = models.ManyToManyField(User, related_name='chats')
-    post = models.ForeignKey(
-        'posts.Post',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='chats'
-    )
+    # post = models.ForeignKey(
+    #     'posts.Post',
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    #     related_name='chats'
+    # )
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

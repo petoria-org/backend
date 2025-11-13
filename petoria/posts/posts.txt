@@ -1,0 +1,69 @@
+class lost posts:
+
+o+d title
+o   discription
+r   image
+r   location 
+r   type 
+r   sex
+o+d email
+o+d phone
+r   name
+
+o   marking
+o   breed
+o   age
+r   lost time
+
+d   status
+d   user
+d   create time
+d   last update time
+=================================================
+
+class adopt:
+
+o+d title
+o   discription
+r   image
+r   location
+r   type
+r   sex
+o+d email
+o+d phone
+r   name
+
+r   age
+r   breed
+r   diseases
+r   has birth certificate
+r   vacination
+r   is sterilized
+
+d   status
+d   user
+d   create time
+d   last update time
+=================================================
+
+class found posts:
+
+o+d title
+o   discription
+r   image
+r   location 
+r   type 
+r   sex (including unknown)
+o+d phone
+o+d email
+--  name can be set to blank
+
+o   marking
+o   breed 
+o   age
+r   found time
+
+d   status
+d   user
+d   create time
+d   last update time
