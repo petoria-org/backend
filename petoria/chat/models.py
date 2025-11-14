@@ -46,13 +46,32 @@ class Chat(models.Model):
 
 
 class Message(models.Model):
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    body = models.TextField(null=True)
-    timestamp = models.DateTimeField(default=timezone.now)
+    chat = models.ForeignKey(
+        Chat,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_messages'
+    )
+    
+    body = models.TextField(blank=True)
+    
+    timestamp = models.DateTimeField(
+        default=timezone.now
+    )
+    
+    is_read = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ['timestamp']
+        ordering = ["timestamp"]
+        indexes = [
+            models.Index(fields=["chat", "timestamp"]),
+        ]
+
 
     def __str__(self):
         return str(self.id)
