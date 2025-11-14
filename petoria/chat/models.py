@@ -7,7 +7,7 @@ class Chat(models.Model):
     members = models.ManyToManyField(User, related_name='chats')
     is_private = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
-
+    
     class Meta:
         ordering = ['-created_at']
 

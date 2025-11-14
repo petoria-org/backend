@@ -20,7 +20,7 @@ class MessageSerializer(ModelSerializer):
 
 
 
-class PrivateChatListSerializer(ModelSerializer):
+class ChatListSerializer(ModelSerializer):
     members = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()

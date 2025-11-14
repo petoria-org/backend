@@ -2,9 +2,10 @@ from users.models import User
 from .models import Chat
 from .serializers import(
     GetOrCreateChatSerializer,
-    MessageSerializer
+    MessageSerializer,
+    ChatListSerializer,
 )
-from .paginations import ChatMessageCursorPagination
+from .paginations import ChatCursorPagination
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,7 +23,7 @@ class GetOrCreatePrivateChatView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user1 = request.user
-        user2_id = serializer.validated_data["other_user_id"]
+        user2_id = serializer.validated_data["user_id"]
 
         # Ensure user2 exists
         try:
@@ -51,7 +52,7 @@ class GetOrCreatePrivateChatView(APIView):
 
 class ChatMessagesAPIView(ListAPIView):
     serializer_class = MessageSerializer
-    pagination_class = ChatMessageCursorPagination
+    pagination_class = ChatCursorPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -67,3 +68,14 @@ class ChatMessagesAPIView(ListAPIView):
 
         # Messages are already ordered in pagination class
         return chat.messages.all()
+
+
+class ChatListAPIView(ListAPIView):
+    serializer_class = ChatListSerializer
+    pagination_class = ChatCursorPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        return user.chats.all()
