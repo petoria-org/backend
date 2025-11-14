@@ -4,7 +4,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from users.models import User
 from .models import Chat
-from .serializers import GetOrCreateChatSerializer
+from .serializers import(
+    GetOrCreateChatSerializer,
+    MessageSerializer
+)
+from rest_framework.exceptions import NotFound
+from .paginations import ChatMessageCursorPagination
+from rest_framework.generics import ListAPIView
 
 
 class GetOrCreatePrivateChatView(APIView):
@@ -40,3 +46,23 @@ class GetOrCreatePrivateChatView(APIView):
             {"chat_id": chat.id},
             status=status.HTTP_200_OK
         )
+
+
+class ChatMessagesAPIView(ListAPIView):
+    serializer_class = MessageSerializer
+    pagination_class = ChatMessageCursorPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        chat_id = self.kwargs.get('chat_id')
+        try:
+            chat = Chat.objects.get(id=chat_id)
+        except Chat.DoesNotExist:
+            raise NotFound("Chat not found")
+        
+        # Optional: ensure the user is a participant
+        if self.request.user not in chat.members.all():
+            raise NotFound("You are not a member of this chat")
+
+        # Messages are already ordered in pagination class
+        return chat.messages.all()
