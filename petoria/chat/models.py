@@ -1,77 +1,103 @@
 from django.db import models
 from users.models import User
 from django.utils import timezone
-from django.core.exceptions import ValidationError
 
-class Chat(models.Model):
-    members = models.ManyToManyField(User, related_name='chats')
-    is_private = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
+
+class Chat (models.Model):
+    User1 = models.ForeignKey(User,
+                             on_delete = models.CASCADE,
+                             related_name = 'chats_as_User1')
+
+    User2 = models.ForeignKey(User,
+                               on_delete = models.CASCADE,
+                               related_name = 'chats_as_user2')
+
+    message_ids = models.JSONField(default = list)
+    created_at = models.DateTimeField(auto_now_add = True)
 
     class Meta:
-        ordering = ['-created_at']
+        unique_together = ('User1', 'User2')
+
+    def chat_name(self):
+        return f"Chat-{self.id}"
+
+    def participants(self):
+        return [self.User1, self.User2]
 
     def __str__(self):
-        return f"Chat {self.id}"
-
-    def add_member(self, user):
-        if self.is_private and self.members.count() >= 2:
-            raise ValidationError(
-                "Private chats cannot" \
-                " have more than 2 participants."
-            )
-        self.members.add(user)
-
-    def add_members(self, *users):
-        for user in users:
-            self.add_member(user)
+        return f"Chat between {self.User1} and {self.User2}"
 
 
-    @staticmethod
-    def get_or_create_private_chat(user1, user2):
-        """
-        Return the existing chat between these two users OR create a new one.
-        """
-        chat = Chat.objects.filter(
-            is_private=True,
-            members=user1
-        ).filter(
-            members=user2
-        ).first()
 
-        if not chat:
-            chat = Chat.objects.create(is_private=True)
-            chat.add_members(user1, user2)
-        return chat
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# from asgiref.sync import async_to_sync
+# from channels.layers import get_channel_layer
+
+
+class Chat(models.Model):
+    participants = models.ManyToManyField(User, related_name='chats')
+    post = models.ForeignKey(
+        'posts.Post',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='chats'
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Chat {self.id} about Post {self.post_id if self.post else 'N/A'}"
+
+    def is_private(self):
+        """Return True if chat has exactly two participants."""
+        return self.participants.count() == 2
+    
 
 class Message(models.Model):
-    chat = models.ForeignKey(
-        Chat,
-        on_delete=models.CASCADE,
-        related_name='messages'
-    )
     
-    sender = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='sent_messages'
-    )
+    """
+       This class represents a chat message. It has a owner (user), timestamp and
+       the message body.
+    """
     
-    body = models.TextField(blank=True)
-    
-    timestamp = models.DateTimeField(
-        default=timezone.now
-    )
-    
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    timestamp = models.DateTimeField(default=timezone.now)
     is_read = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ["timestamp"]
-        indexes = [
-            models.Index(fields=["chat", "timestamp"]),
-        ]
-
+    body = models.TextField('body')
 
     def __str__(self):
         return str(self.id)
+
+    def characters(self):
+        return len(self.body)
