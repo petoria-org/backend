@@ -13,4 +13,4 @@ class BasicUserSerializer(ModelSerializer):
     def get_profile_picture(self, obj):
         if obj.profile_picture and hasattr(obj.profile_picture, 'url'):
             return obj.profile_picture.url
-        return None  # or a default URL like "/media/profile_pics/default_avatar.png"
+        return None
