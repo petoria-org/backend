@@ -1,5 +1,5 @@
 from users.models import User
-from users.serializers import BasicUserSerializer
+from users.serializers import BasicUserSerializer, BasicWithPFPUserSerializer
 from .models import Message, Chat
 
 from rest_framework import serializers
@@ -11,9 +11,15 @@ class GetOrCreateChatSerializer(serializers.Serializer):
 
 
 
-class MessageSerializer(ModelSerializer):
-    sender = BasicUserSerializer(read_only=True)
+class InChatMessageSerializer(ModelSerializer):
+    sender = BasicWithPFPUserSerializer(read_only=True)
+    class Meta:
+        model = Message
+        fields = ['id', 'sender', 'body', 'timestamp']
 
+
+class ChatListMessageSerializer(ModelSerializer):
+    sender = BasicUserSerializer(read_only=True)
     class Meta:
         model = Message
         fields = ['id', 'sender', 'body', 'timestamp']
@@ -42,14 +48,14 @@ class ChatListSerializer(ModelSerializer):
         current_user_id = request.user.id
 
         return [
-            BasicUserSerializer(user, context=self.context).data
+            BasicWithPFPUserSerializer(user, context=self.context).data
             for user in obj.members.exclude(id=current_user_id)
         ]
 
     def get_last_message(self, obj):
         last_msg = obj.messages.last()
         if last_msg:
-            return MessageSerializer(last_msg, context=self.context).data
+            return ChatListMessageSerializer(last_msg, context=self.context).data
         return None
 
     def get_unread_count(self, obj):

@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import(
     GetOrCreatePrivateChatView,
-    ChatMessagesAPIView
+    ChatMessagesAPIView,
+    ChatListAPIView
 )
 
 urlpatterns = [
@@ -16,6 +17,9 @@ urlpatterns = [
         'messages/<int:chat_id>/',
         ChatMessagesAPIView.as_view(),
         name='chat-messages'
-        
-    )
+    ),
+    path(
+        'my-chats/',
+        ChatListAPIView.as_view(),
+    )    
 ]

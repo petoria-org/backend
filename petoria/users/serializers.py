@@ -4,6 +4,12 @@ from rest_framework.serializers import ModelSerializer
 
 
 class BasicUserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
+    
+class BasicWithPFPUserSerializer(ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
 
     class Meta:
