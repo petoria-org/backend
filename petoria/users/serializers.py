@@ -1,9 +1,9 @@
 from .models import User
 from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
-class BasicUserSerializer(
-    serializers.ModelSerializer
-):
+
+class BasicUserSerializer(ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
 
     class Meta:
