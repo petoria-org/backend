@@ -32,7 +32,8 @@ class Chat(models.Model):
     @staticmethod
     def get_or_create_private_chat(user1, user2):
         """
-        Return the existing chat between these two users OR create a new one.
+        Return the existing chat between 
+        two users OR create a new one.
         """
         chat = Chat.objects.filter(
             is_private=True,

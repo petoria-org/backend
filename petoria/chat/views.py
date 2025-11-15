@@ -26,8 +26,8 @@ class GetOrCreatePrivateChatView(APIView):
         
         serializer.is_valid(raise_exception=True)
         
-        user2_id = serializer.validated_data["user_id"]
         user1 = request.user
+        user2_id = serializer.validated_data["user_id"]
 
         # Ensure user2 exists
         try:
