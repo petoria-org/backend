@@ -1,7 +1,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from channels.layers import get_channel_layer
 from .models import Chat, Message
 from .serializers import InChatMessageSerializer
 
@@ -33,6 +32,9 @@ class UserChatsConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         message_body = data.get("message")
         chat_id = data.get("chat_id")
+        
+        if not await self.user_in_chat(chat_id):
+            return  # silently drop or send error
 
         if not message_body or not chat_id:
             return
@@ -66,3 +68,9 @@ class UserChatsConsumer(AsyncWebsocketConsumer):
     def save_message(self, chat_id, message_body):
         chat = Chat.objects.get(id=chat_id)
         return Message.objects.create(chat=chat, sender=self.user, body=message_body)
+    
+    @database_sync_to_async
+    def user_in_chat(self, chat_id):
+        return Chat.objects.\
+            filter(id=chat_id, members=self.user)\
+            .exists()
