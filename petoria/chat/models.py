@@ -2,14 +2,16 @@ from django.db import models
 from users.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 
 class Chat(models.Model):
     members = models.ManyToManyField(User, related_name='chats')
     is_private = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
-    
+    updated_at = models.DateTimeField(default=timezone.now)
+
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-updated_at']
 
     def __str__(self):
         return f"Chat {self.id}"
@@ -58,7 +60,10 @@ class Message(models.Model):
         related_name='sent_messages'
     )
     
-    body = models.TextField(blank=True)
+    body = models.TextField(
+        blank=True,
+        validators=[MinLengthValidator(1)]
+    )
     
     timestamp = models.DateTimeField(
         default=timezone.now

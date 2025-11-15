@@ -81,4 +81,4 @@ class ChatListAPIView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return user.chats.all()
+        return user.chats.order_by('-updated_at')
