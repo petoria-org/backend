@@ -1,13 +1,13 @@
 # posts/models.py
 from django.contrib.gis.db import models
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
 from django.contrib.contenttypes.models import ContentType
-from django.core.validators import RegexValidator, MinValueValidator
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.core.exceptions import ValidationError
 from users.models import User
-from .enums import PetType, Gender, ContactMethod, PostStatus
 from locations.models import Location
+from .enums import PetType, Gender, ContactMethod, PostStatus
 
 
 '''
@@ -36,7 +36,7 @@ class BasePost(models.Model):
 
     # === CORE POST INFORMATION ===
     title = models.CharField(
-        max_length=200,
+        max_length=140,
         help_text=_("Clear, descriptive title for the post")
     )
     
@@ -53,11 +53,11 @@ class BasePost(models.Model):
     )
 
     # === MEDIA ===
-    images = models.JSONField(
-        default=list,
-        blank=True,
-        help_text=_("List of image URLs for the post")
-    )
+   # images = models.JSONField(
+    #   default=list,
+    #    blank=True,
+     #   help_text=_("List of image URLs for the post")
+    #)
 
     # === Location info ===
     location = models.OneToOneField(
@@ -143,11 +143,33 @@ class BasePost(models.Model):
 
         return methods
 
+
+    # === MEDIA ===
+class PostImage(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    post = GenericForeignKey('content_type', 'object_id')
+
+    image = models.ImageField(upload_to='pets/')
+
+
+    def clean(self):
+        model_class = self.content_type.model_class()
+        count = model_class.objects.get(id=self.object_id).images.count() if self.object_id else 0
+        if count >= 7:
+            raise ValidationError("Each post cannot have more than 7 photos.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
 class LostFoundPost(BasePost):
     pass
+    images = GenericRelation(PostImage)
 
 class AdaptionPost(BasePost):
     pass
+    images = GenericRelation(PostImage)
 
 
     # breed = models.CharField(
