@@ -5,6 +5,9 @@ from django.utils import timezone
 from locations.models import Location
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
+import random
+from datetime import timedelta
+
 
 class User(AbstractUser):
     
@@ -128,21 +131,43 @@ class User(AbstractUser):
         return bool(self.phone or self.is_email_verified)
 
 
+
+def generate_6_digit_code():
+    return f"{random.randint(100000, 999999)}"
+
 class EmailVerification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='email_verification')
-    token = models.CharField(max_length=100, unique=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="email_verification_codes"
+    )
+
+    email = models.EmailField()
+    code = models.CharField(max_length=6, default=generate_6_digit_code)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     is_used = models.BooleanField(default=False)
-    
-    class Meta:
-        indexes = [
-            models.Index(fields=['token']),
-            models.Index(fields=['user', 'is_used']),
-        ]
-    
-    def __str__(self):
-        return f"Verification for {self.user.email} - {self.created_at}"
 
-    def is_expired(self):
-        return timezone.now() > self.expires_at
+    def save(self, *args, **kwargs):
+        # Automatically set expiration time (2 minutes default)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=2)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        """Return True if code is not used and not expired."""
+        now = timezone.now()
+        return (not self.is_used) and (now <= self.expires_at)
+
+    def mark_used(self):
+        """Mark this code as used and verify the user."""
+        self.is_used = True
+        self.save()
+
+        # Mark email as verified on the user model
+        self.user.email = self.email
+        self.user.is_email_verified = True
+        self.user.save()
+
+    def __str__(self):
+        return f"Code {self.code} for {self.email}"
