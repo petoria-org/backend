@@ -1,13 +1,21 @@
 from rest_framework.pagination import CursorPagination
-
-NUMBER_OF_MESSAGES_TO_LOAD_AT_ONCE = 50
+from django.db.models import Max, F
+from django.db.models.functions import Coalesce
 
 class MessageCursorPagination(CursorPagination):
-    page_size = NUMBER_OF_MESSAGES_TO_LOAD_AT_ONCE
+    page_size = 50
     ordering = '-timestamp'
     cursor_query_param = 'cursor'
 
 class ChatCursorPagination(CursorPagination):
-    page_size = NUMBER_OF_MESSAGES_TO_LOAD_AT_ONCE
-    ordering = 'created_at'
+    page_size = 20
     cursor_query_param = 'cursor'
+    
+    def paginate_queryset(self, queryset, request, view=None):
+        queryset = queryset.annotate(
+            last_message_time=Coalesce(
+                Max('messages__timestamp'),
+                F('created_at')
+            )
+        ).order_by('-last_message_time')
+        return super().paginate_queryset(queryset, request, view)
