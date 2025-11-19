@@ -47,7 +47,7 @@ d   last update time
 =================================================
 
 
-class Surrender and custody :
+class adopt:
 
 o+d title
 o   discription
