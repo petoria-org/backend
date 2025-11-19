@@ -39,11 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    
 
     # third parties
     'rest_framework',
     'django_extensions',
     'channels',
+    'imagekit',
 
     # internal apps
     'chat',
@@ -85,12 +87,18 @@ WSGI_APPLICATION = 'petoria.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.spatialite',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE" : 'django.contrib.gis.db.backends.postgis',
+        "NAME": "petoriadb",
+        "USER": "postgres",
+        "PASSWORD": "123456ls",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
+
 
 CHANNEL_LAYERS = {
     'default': {
