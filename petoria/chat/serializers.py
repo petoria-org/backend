@@ -39,16 +39,3 @@ class ChatSerializer(serializers.ModelSerializer):
             return participant.unread_count
         except ChatParticipant.DoesNotExist:
             return 0
-
-class CreateChatSerializer(serializers.Serializer):
-    other_user_id = serializers.IntegerField()
-    message = serializers.CharField(max_length=5000)
-    
-    def validate_other_user_id(self, value):
-        if value == self.context['request'].user.id:
-            raise serializers.ValidationError("Cannot chat with yourself")
-        try:
-            User.objects.get(id=value)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User not found")
-        return value
