@@ -24,10 +24,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send_json({"type": "connected"})
 
     async def disconnect(self, code):
-        await self.channel_layer.group_discard(self.inbox_group, self.channel_name)
+        # Only discard inbox group if it was created
+        if hasattr(self, "inbox_group"):
+            await self.channel_layer.group_discard(self.inbox_group, self.channel_name)
 
-        if self.active_chat_id:
+        # Only discard active chat group if one is joined
+        if hasattr(self, "active_chat_id") and self.active_chat_id:
             await self.channel_layer.group_discard(f"chat_{self.active_chat_id}", self.channel_name)
+
+
+            if self.active_chat_id:
+                await self.channel_layer.group_discard(f"chat_{self.active_chat_id}", self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
         try:
@@ -118,7 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # find or create chat between 2 users
         chat = await self.get_or_create_chat(self.user, recipient)
         chat_id = chat.id
-
+        
         msg = await self.create_message(chat_id, content)
         serialized = await self.serialize_message(msg)
 
@@ -189,10 +196,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         chat = Chat.get_chat_between(user1, user2)
         if chat:
             return chat
-
+       
         chat = Chat.objects.create()
-        chat.participants.add(user1)
-        chat.participants.add(user2)
         ChatParticipant.objects.create(chat=chat, user=user1)
         ChatParticipant.objects.create(chat=chat, user=user2)
         return chat

@@ -142,7 +142,7 @@ class EmailVerification(models.Model):
         related_name="email_verification_codes"
     )
 
-    email = models.EmailField()
+    email = models.EmailField(null=True)
     code = models.CharField(max_length=6, default=generate_6_digit_code)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
