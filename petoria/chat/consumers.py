@@ -43,14 +43,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         if action == "open_chat":
             return await self.open_chat(data.get("chat_id"))
+
         if action == "close_chat":
             return await self.close_chat()
+
         if action == "send_message":
             return await self.send_message_action(
                 chat_id=data.get("chat_id"),
                 recipient_id=data.get("recipient_id"),
                 content=data.get("message")
             )
+
         if action == "mark_read":
             return await self.mark_chat_read(
                 data.get("chat_id"),
@@ -249,6 +252,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def serialize_message(self, msg):
         return {
             "id": msg.id,
+            "chat_id": msg.chat.id,
             "sender_id": msg.sender.id,
             "sender_name": msg.sender.username,
             "content": msg.content,
