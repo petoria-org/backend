@@ -7,6 +7,6 @@ from .views import (
 
 urlpatterns = [
     path('list/', ChatListView.as_view(), name='chat-list'),
-    path('<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
+    path('messages/<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
     path("with/", ChatWithUserAPIView.as_view(), name="chat-with-user"),
 ]
