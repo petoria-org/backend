@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from users.models import User
+from .paginations import MessageCursorPagination, ChatCursorPagination
 
 # ------------------------------------------------------------
 # ChatListView
@@ -15,6 +16,7 @@ from users.models import User
 class ChatListView(generics.ListAPIView):
     serializer_class = ChatSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = ChatCursorPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -44,6 +46,7 @@ class ChatListView(generics.ListAPIView):
 class ChatMessagesListView(generics.ListAPIView):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = MessageCursorPagination
 
     def get_queryset(self):
         chat_id = self.kwargs.get("chat_id")
