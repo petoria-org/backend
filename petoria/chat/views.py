@@ -1,12 +1,11 @@
-from rest_framework import generics, permissions
-from django.db.models import OuterRef, Subquery
-from .models import Chat, Message
-from .serializers import ChatSerializer, MessageSerializer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
 from users.models import User
+from .models import Chat, Message
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.db.models import OuterRef, Subquery
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, permissions, status
+from .serializers import ChatSerializer, MessageSerializer
 from .paginations import MessageCursorPagination, ChatCursorPagination
 
 # ------------------------------------------------------------
@@ -37,7 +36,6 @@ class ChatListView(generics.ListAPIView):
             )
             .order_by("-last_message_created")
         )
-
 
 # ------------------------------------------------------------
 # ChatMessagesListView

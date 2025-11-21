@@ -51,7 +51,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return await self.send_message_action(
                 chat_id=data.get("chat_id"),
                 recipient_id=data.get("recipient_id"),
-                content=data.get("message")
+                content=data.get("message"),
+                reply_to_id=data.get("reply_to_id")
             )
 
         if action == "mark_read":
@@ -93,7 +94,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # --------------------------------------------------------
     # ACTION: SEND MESSAGE (existing or new chat)
     # --------------------------------------------------------
-    async def send_message_action(self, chat_id, recipient_id, content):
+    async def send_message_action(self, chat_id, recipient_id, content, reply_to_id):
         if not content or not content.strip():
             return await self.send_error("empty_message")
 
@@ -117,7 +118,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat = await self.get_or_create_chat(self.user, recipient)
             chat_id = chat.id
 
-        msg = await self.create_message(chat_id, content)
+        msg = await self.create_message(chat_id, content, reply_to_id)
         serialized = await self.serialize_message(msg)
 
         # sending message to chat window
@@ -238,8 +239,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return chat
 
     @database_sync_to_async
-    def create_message(self, chat_id, content):
-        msg = Message.objects.create(chat_id=chat_id, sender=self.user, content=content)
+    def create_message(self, chat_id, content, reply_to_id):
+        msg = Message.objects.create(
+            chat_id=chat_id,
+            sender=self.user,
+            content=content,
+            reply_to_id = reply_to_id
+        )
 
         # increment unread for OTHER participant
         ChatParticipant.objects.filter(chat_id=chat_id).exclude(user=self.user).update(
@@ -258,8 +264,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "content": msg.content,
             "timestamp": msg.timestamp.isoformat(),
             "is_read": msg.is_read,
+            "reply_to": (
+                {
+                    "id": msg.reply_to.id,
+                    "sender_id": msg.reply_to.sender_id,
+                    "content": msg.reply_to.content
+                }
+                if msg.reply_to else None
+            )
         }
-
+    
     @database_sync_to_async
     def mark_as_read(self, chat_id, user_id):
         # IDs of unread messages
