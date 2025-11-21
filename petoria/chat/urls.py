@@ -2,9 +2,11 @@ from django.urls import path
 from .views import (
     ChatListView,
     ChatMessagesListView,
+    ChatWithUserAPIView,
 )
 
 urlpatterns = [
-    path('chats/', ChatListView.as_view(), name='chat-list'),
-    path('chats/<int:chat_pk>/messages/', ChatMessagesListView.as_view(), name='chat-messages'),
+    path('list/', ChatListView.as_view(), name='chat-list'),
+    path('<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
+    path("with/", ChatWithUserAPIView.as_view(), name="chat-with-user"),
 ]
