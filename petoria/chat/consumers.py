@@ -8,6 +8,7 @@ from users.models import User
 from django.db.models import F
 
 class ChatConsumer(AsyncWebsocketConsumer):
+
     async def connect(self):
         if self.scope["user"].is_anonymous:
             await self.close()
@@ -23,6 +24,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send_json({"type": "connected"})
 
+
     async def disconnect(self, code):
         # Only discard inbox group if it was created
         if hasattr(self, "inbox_group"):
@@ -33,21 +35,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(f"chat_{self.active_chat_id}", self.channel_name)
 
 
-            if self.active_chat_id:
-                await self.channel_layer.group_discard(f"chat_{self.active_chat_id}", self.channel_name)
-
     async def receive(self, text_data=None, bytes_data=None):
-        try:
-            data = json.loads(text_data)
-        except:
-            return await self.send_error("invalid_json")
+        try: data = json.loads(text_data)
+        except: return await self.send_error("invalid_json")
 
         action = data.get("action")
 
-        if action == "join_chat":
-            return await self.join_chat(data.get("chat_id"))
-        if action == "leave_chat":
-            return await self.leave_chat(data.get("chat_id"))
+        if action == "open_chat":
+            return await self.open_chat(data.get("chat_id"))
+        if action == "close_chat":
+            return await self.close_chat()
         if action == "send_message":
             return await self.send_message_action(
                 chat_id=data.get("chat_id"),
@@ -55,35 +52,40 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 content=data.get("message")
             )
         if action == "mark_read":
-            return await self.mark_chat_read(data.get("chat_id"))
+            return await self.mark_chat_read(
+                data.get("chat_id"),
+                data.get("message_ids", [])
+            )
 
         return await self.send_error("unknown_action")
 
     # --------------------------------------------------------
-    # ACTION: JOIN CHAT
+    # ACTION: OPEN CHAT
     # --------------------------------------------------------
-    async def join_chat(self, chat_id):
+    async def open_chat(self, chat_id):
         if not chat_id:
             return await self.send_error("missing_chat_id")
 
         if not await self.is_user_in_chat(chat_id):
             return await self.send_error("not_in_chat")
 
-        # Leave previous chat
-        if self.active_chat_id:
-            await self.channel_layer.group_discard(f"chat_{self.active_chat_id}", self.channel_name)
+        # close previous chat
+        await self.close_chat()
 
         self.active_chat_id = chat_id
         await self.channel_layer.group_add(f"chat_{chat_id}", self.channel_name)
 
-        await self.send_json({"type": "joined_chat", "chat_id": chat_id})
+        await self.send_json({"type": "opened_chat", "chat_id": chat_id})
 
-    async def leave_chat(self, chat_id):
-        if chat_id and chat_id == self.active_chat_id:
+    # --------------------------------------------------------
+    # ACTION: CLOSE CHAT
+    # --------------------------------------------------------
+    async def close_chat(self):
+        chat_id = self.active_chat_id
+        if chat_id:
             await self.channel_layer.group_discard(f"chat_{chat_id}", self.channel_name)
             self.active_chat_id = None
-
-        await self.send_json({"type": "left_chat", "chat_id": chat_id})
+            await self.send_json({"type": "closed_chat", "chat_id": chat_id})
 
     # --------------------------------------------------------
     # ACTION: SEND MESSAGE (existing or new chat)
@@ -99,37 +101,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not await self.is_user_in_chat(chat_id):
                 return await self.send_error("not_in_chat")
 
-            msg = await self.create_message(chat_id, content)
-            serialized = await self.serialize_message(msg)
-
-            # notify chat members who have the chat open
-            await self.channel_layer.group_send(
-                f"chat_{chat_id}",
-                {"type": "chat.message", "message": serialized}
-            )
-
-            # notify inbox for chat list updates and unread counts
-            await self.broadcast_chat_list_update(chat_id, serialized)
-
-            return await self.send_json({"type": "message_sent", "message": serialized})
-
         # Case 2: First message → recipient_id required
-        if not recipient_id:
+        elif not recipient_id:
             return await self.send_error("missing_recipient_id")
-
-        try:
-            recipient = await self.get_user(recipient_id)
-        except ObjectDoesNotExist:
-            return await self.send_error("recipient_not_found")
-
-        # find or create chat between 2 users
-        chat = await self.get_or_create_chat(self.user, recipient)
-        chat_id = chat.id
         
+        else:
+            try: recipient = await self.get_user(recipient_id)
+            
+            except ObjectDoesNotExist:
+                return await self.send_error("recipient_not_found")
+
+            chat = await self.get_or_create_chat(self.user, recipient)
+            chat_id = chat.id
+
         msg = await self.create_message(chat_id, content)
         serialized = await self.serialize_message(msg)
 
-        # realtime message to chat members in chat window
+        # sending message to chat window
         await self.channel_layer.group_send(
             f"chat_{chat_id}",
             {"type": "chat.message", "message": serialized}
@@ -138,31 +126,46 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # realtime update to both users' chat lists
         await self.broadcast_chat_list_update(chat_id, serialized)
 
-        return await self.send_json({"type": "message_sent", "chat_id": chat_id, "message": serialized})
+        return await self.send_json({
+            "type": "message_sent",
+            "chat_id": chat_id,
+            "message": serialized
+        })
 
     # --------------------------------------------------------
     # ACTION: MARK CHAT AS READ
     # --------------------------------------------------------
-    async def mark_chat_read(self, chat_id):
+    async def mark_chat_read(self, chat_id, message_ids):
         if not chat_id:
             return await self.send_error("missing_chat_id")
-
+    
         if not await self.is_user_in_chat(chat_id):
             return await self.send_error("not_in_chat")
-
-        msg_ids = await self.mark_as_read(chat_id, self.user.id)
-
-        # notify other user(s) via chat group
+    
+        if not message_ids:
+            return await self.send_error("missing_message_ids")
+    
+        # mark specific messages
+        updated_ids = await self.mark_specific_messages_as_read(
+            chat_id, self.user.id, message_ids
+        )
+    
+        # send read receipt ONLY to users inside chat window
         await self.channel_layer.group_send(
             f"chat_{chat_id}",
             {
                 "type": "chat.read",
                 "reader_id": self.user.id,
-                "message_ids": msg_ids
+                "message_ids": updated_ids,
             }
         )
+        await self.broadcast_read_update_to_inbox(chat_id)
 
-        return await self.send_json({"type": "marked_read", "message_ids": msg_ids})
+        return await self.send_json({
+            "type": "marked_read",
+            "message_ids": updated_ids
+        })
+
 
     # --------------------------------------------------------
     # CHANNEL LAYER HANDLERS
@@ -183,6 +186,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # --------------------------------------------------------
     # DB HELPERS
     # --------------------------------------------------------
+    @database_sync_to_async
+    def mark_specific_messages_as_read(self, chat_id, user_id, message_ids):
+
+        # Get the subset of provided IDs that are valid unread messages
+        valid_ids = list(
+            Message.objects.filter(
+                chat_id=chat_id,
+                id__in=message_ids,
+                is_read=False
+            )
+            .exclude(sender_id=user_id)
+            .values_list("id", flat=True)
+        )
+
+        if not valid_ids:
+            return []
+
+        # Mark them as read
+        Message.objects.filter(id__in=valid_ids).update(is_read=True)
+
+        # Decrease unread count efficiently
+        ChatParticipant.objects.filter(
+            chat_id=chat_id,
+            user_id=user_id
+        ).update(unread_count=F("unread_count") - len(valid_ids))
+
+        return valid_ids
+
+
     @database_sync_to_async
     def get_user(self, user_id):
         return User.objects.get(id=user_id)
@@ -217,7 +249,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def serialize_message(self, msg):
         return {
             "id": msg.id,
-            "chat_id": msg.chat_id,
             "sender_id": msg.sender.id,
             "sender_name": msg.sender.username,
             "content": msg.content,
@@ -263,6 +294,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_list_update",
                     "chat": chat_preview
+                }
+            )
+    
+    async def broadcast_read_update_to_inbox(self, chat_id):
+        unread_count = await self.get_unread(self.user.id, chat_id)
+        if unread_count != 0:
+            return
+        
+        participants = await self.get_chat_participant_ids(chat_id)
+        for uid in participants:
+    
+            update = {
+                "id": chat_id,
+                "seen" : True
+            }
+    
+            await self.channel_layer.group_send(
+                f"user_{uid}",
+                {
+                    "type": "chat_list_update",
+                    "chat": update
                 }
             )
 

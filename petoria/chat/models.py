@@ -17,10 +17,6 @@ class Chat(models.Model):
             participants=user1
         ).filter(
             participants=user2
-        ).annotate(
-            participant_count=Count('participants')
-        ).filter(
-            participant_count=2
         ).first()
 
 class ChatParticipant(models.Model):
