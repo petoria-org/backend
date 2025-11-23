@@ -15,7 +15,7 @@ o   breed
 o   marking
 r   lost time
 
-d   status
+d   status *********
 d   user
 d   create time
 d   last update time
@@ -66,7 +66,10 @@ r   has birth certificate
 r   vacination
 r   is sterilized
 
+
 d   status
 d   user
 d   create time
 d   last update time
+
+

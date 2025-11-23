@@ -3,32 +3,50 @@ from django.utils.translation import gettext_lazy as _
 
 
 class PetType(models.TextChoices):
-    DOG = 'dog', _('Dog')
-    CAT = 'cat', _('Cat')
-    BIRD = 'bird', _('Bird')
-    RABBIT = 'rabbit', _('Rabbit')
-    FISH = 'fish', _('Fish')
-    REPTILE = 'reptile', _('Reptile')
-    SMALL_ANIMAL = 'small_animal', _('Small Animal')
-    OTHER = 'other', _('Other')
+    DOG: str = 'dog', _('Dog')
+    CAT: str = 'cat', _('Cat')
+    BIRD: str = 'bird', _('Bird')
+    RABBIT: str = 'rabbit', _('Rabbit')
+    FISH: str = 'fish', _('Fish')
+    REPTILE: str = 'reptile', _('Reptile')
+    SMALL_ANIMAL: str = 'small_animal', _('Small Animal')
+    OTHER: str = 'other', _('Other')
 
 class Gender(models.TextChoices):
-    MALE = 'male', _('Male')
-    FEMALE = 'female', _('Female')
-    UNKNOWN = 'unknown', _('Unknown')
+    MALE: str = 'male', _('Male')
+    FEMALE: str = 'female', _('Female')
+    UNKNOWN: str = 'unknown', _('Unknown')
 
 class ContactMethod(models.TextChoices):
-    CHAT = 'chat', _('In-App Chat Only')
-    PHONE = 'phone', _('Phone Preferred')
-    EMAIL = 'email', _('Email Preferred')
-    ANY = 'any', _('Any Method')
+    CHAT: str = 'chat', _('In-App Chat Only')
+    PHONE: str = 'phone', _('Phone Preferred')
+    EMAIL: str = 'email', _('Email Preferred')
+    ANY: str = 'any', _('Any Method')
 
 class PostStatus(models.TextChoices):
-    ACTIVE = 'active', _('Active')
-    RESOLVED = 'resolved', _('Resolved')
-    EXPIRED = 'expired', _('Expired')
+    ACTIVE: str = 'active', _('Active')
+    RESOLVED: str = 'resolved', _('Resolved')
+    EXPIRED: str = 'expired', _('Expired')
 
 class PostType(models.TextChoices):
-    LOST = 'lost', _('Lost')
-    FOUND = 'found', _('Found')
-    ADOPTION = 'adoption', _('Adoption')
+    LOST: str = 'lost', _('Lost')
+    FOUND: str = 'found', _('Found')
+    ADOPTION: str = 'adoption', _('Adoption')
+
+class PetSIZES(models.TextChoices):
+    SMALL: str = 'small', _('Small'),
+    MEDIUM: str = 'medium', _('Medium'),
+    LARG: str = 'large', _('Large')
+
+class SUITABILITY(models.TextChoices):
+    Apartment: str = 'apartment', _('Suitable for Apartment')
+    Garden: str = 'garden', _('Suitable for Garden')
+    Family: str = 'family', _('Good for Families')
+    Large_house: str = 'large_house', _('Needs Large House')
+    OTHER: str = 'other', _('Other')
+
+class HealthStatus(models.TextChoices):
+    HEALTHY: str = 'healthy', _('Healthy')
+    SICK: str = 'sick', _('Sick')
+    INJURED: str = 'injured', _('Injured')
+    UNKNOWN: str = 'unknown', _('Unknown')
