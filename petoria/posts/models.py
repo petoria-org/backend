@@ -59,7 +59,7 @@ class BasePost(models.Model):
 
     # === CORE POST INFO ===
     title: models.CharField = models.CharField(
-        max_length=140,
+        max_length=120,
         blank=True,
         null=True,
         help_text=_("Clear, descriptive title for the post")
@@ -181,10 +181,8 @@ class BasePost(models.Model):
 
     def generate_auto_title(self):
         parts: list[str] = [self.pet_type.capitalize()]
-        if self.color:
-            parts.append(self.color.capitalize())
-        if self.pet_sex:
-            parts.append(self.pet_sex.capitalize())
+        if self.pet_type:
+            parts.append(self.pet_type.capitalize())
         if self.location and self.location.city:
             parts.append(f"near {self.location.city}")
         return " ".join(parts).strip()
