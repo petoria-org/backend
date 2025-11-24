@@ -7,7 +7,6 @@ from django.utils.translation import gettext_lazy as _
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
 from locations.models import Location
-from phonenumber_field.modelfields import PhoneNumberField
 from users.models import User
 
 from .enums import PetType, Gender, ContactMethod, PostStatus
@@ -133,17 +132,29 @@ class BasePost(models.Model):
     )
 
     # === CONTACT INFO ===
-    contact_phone = PhoneNumberField(
-        blank=True,
-        null=True,
-        help_text=_("Optional phone.")
+
+    contact_phone = models.BooleanField(
+        default=False,
+        help_text=_("Show phone")
     )
-    contact_email = models.EmailField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text=_("Optional email")
+
+    contact_email = models.BooleanField(
+        default=False,
+        help_text=_("Show email ")
     )
+
+    # contact_phone = PhoneNumberField(
+    # blank=True,
+    # null=True,
+    # help_text=_("Optional phone.")
+    # )
+
+    # contact_email = models.EmailField(
+    # max_length=100,
+    # blank=True,
+    # null=True,
+    # help_text=_("Optional email")
+    # )
 
     # === STATUS & METADATA ===
     status = models.CharField(
