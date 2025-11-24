@@ -126,3 +126,5 @@ class Location(models.Model):
         if self.point:
             return f"{self.city or ''}, {self.country or ''}".strip(" ,") or "Location"
         return self.city or self.country or "Unknown Location"
+
+#gcgmfy

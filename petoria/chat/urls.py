@@ -1,14 +1,12 @@
 from django.urls import path
 from .views import (
-    ChatListCreateAPIView,
-    ChatDetailAPIView,
-    ChatMessagesAPIView,
-    MarkMessagesReadAPIView
+    ChatListView,
+    ChatMessagesListView,
+    ChatWithUserAPIView,
 )
 
 urlpatterns = [
-    path('chats/', ChatListCreateAPIView.as_view(), name='chat-list-create'),
-    path('chats/<int:pk>/', ChatDetailAPIView.as_view(), name='chat-detail'),
-    path('chats/<int:chat_pk>/messages/', ChatMessagesAPIView.as_view(), name='chat-messages'),
-    path('chats/<int:chat_pk>/mark-read/', MarkMessagesReadAPIView.as_view(), name='chat-mark-read'),
+    path('list/', ChatListView.as_view(), name='chat-list'),
+    path('messages/<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
+    path("with/", ChatWithUserAPIView.as_view(), name="chat-with-user"),
 ]

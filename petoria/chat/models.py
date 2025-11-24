@@ -1,82 +1,43 @@
 from django.db import models
+from django.db.models import Count
 from users.models import User
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.core.validators import MinLengthValidator
+
 
 class Chat(models.Model):
-    members = models.ManyToManyField(User, related_name='chats')
-    is_private = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+    """One-to-one private chat between exactly two users"""
+    participants = models.ManyToManyField(User, through='ChatParticipant')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-updated_at']
+        ordering = ['-created_at']
 
-    def __str__(self):
-        return f"Chat {self.id}"
-
-    def add_member(self, user):
-        if self.is_private and self.members.count() >= 2:
-            raise ValidationError(
-                "Private chats cannot" \
-                " have more than 2 participants."
-            )
-        self.members.add(user)
-
-    def add_members(self, *users):
-        for user in users:
-            self.add_member(user)
-
-
-    @staticmethod
-    def get_or_create_private_chat(user1, user2):
-        """
-        Return the existing chat between these two users OR create a new one.
-        """
-        chat = Chat.objects.filter(
-            is_private=True,
-            members=user1
+    @classmethod
+    def get_chat_between(cls, user1, user2):
+        """Prevent duplicate chats between same users"""
+        return cls.objects.filter(
+            participants=user1
         ).filter(
-            members=user2
+            participants=user2
+        ).annotate(
+            participant_count=Count('participants')
+        ).filter(
+            participant_count=2
         ).first()
 
-        if not chat:
-            chat = Chat.objects.create(is_private=True)
-            chat.add_members(user1, user2)
-        return chat
+
+class ChatParticipant(models.Model):
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='participants_info')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now_add=True)
+    unread_count = models.IntegerField(default=0)
 
 
 class Message(models.Model):
-    chat = models.ForeignKey(
-        Chat,
-        on_delete=models.CASCADE,
-        related_name='messages'
-    )
-    
-    sender = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='sent_messages'
-    )
-    
-    body = models.TextField(
-        blank=True,
-        validators=[MinLengthValidator(1)]
-    )
-    
-    timestamp = models.DateTimeField(
-        default=timezone.now
-    )
-    
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ["timestamp"]
-        indexes = [
-            models.Index(fields=["chat", "timestamp"]),
-        ]
-
-
-    def __str__(self):
-        return str(self.id)
+        ordering = ['-timestamp']
