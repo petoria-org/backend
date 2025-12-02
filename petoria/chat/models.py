@@ -1,5 +1,12 @@
+from uuid import uuid4
 from django.db import models
 from users.models import User
+from chat.enums import AttachmentType
+
+
+def attachment_upload_to(instance, filename):
+    ext = filename.split('.')[-1] if '.' in filename else ''
+    return f"attachments/{instance.uploaded_by_id}/{uuid4().hex}{'.' + ext if ext else ''}"
 
 class Chat(models.Model):
     """One-to-one private chat between exactly two users"""
@@ -54,6 +61,36 @@ class Message(models.Model):
         related_name="replies"
     )
 
-    
+
     class Meta:
         ordering = ['-timestamp']
+
+
+class Attachment(models.Model):
+    message = models.ForeignKey(
+        Message,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        null=True,
+        blank=True,
+    )
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='uploaded_attachments'
+    )
+    file = models.FileField(upload_to=attachment_upload_to)
+    content_type = models.CharField(max_length=100)
+    size = models.PositiveIntegerField()
+    type = models.CharField(
+        max_length=10,
+        choices=AttachmentType.choices,
+        default=AttachmentType.OTHER,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Attachment {self.id} ({self.type})"
