@@ -3,7 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Chat, Message, ChatParticipant
+from .models import Chat, Message, ChatParticipant, Attachment
 from users.models import User
 from django.db.models import F
 
@@ -94,11 +94,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # --------------------------------------------------------
     # ACTION: SEND MESSAGE (existing or new chat)
     # --------------------------------------------------------
-    async def send_message_action(self, chat_id, recipient_id, content, reply_to_id):
+    async def send_message_action(self, chat_id, recipient_id, content, reply_to_id, attachment_ids=None):
         if not content or not content.strip():
             return await self.send_error("empty_message")
 
         content = content.strip()
+
+        # normalize attachments
+        attachment_ids = attachment_ids or []
+        if not isinstance(attachment_ids, list):
+            return await self.send_error("invalid_attachments")
 
         # Case 1: Existing chat
         if chat_id:
@@ -124,7 +129,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if reply_to_id:
                 return await self.send_error("invalid_reply_target")
 
-        msg = await self.create_message(chat_id, content, reply_to_id)
+        try:
+            validated_attachment_ids = await self.validate_attachments(attachment_ids)
+        except ValueError:
+            return await self.send_error("invalid_attachments")
+
+        msg = await self.create_message(chat_id, content, reply_to_id, validated_attachment_ids)
         serialized = await self.serialize_message(msg)
 
         # sending message to chat window
@@ -249,13 +259,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return Message.objects.filter(id=message_id, chat_id=chat_id).exists()
 
     @database_sync_to_async
-    def create_message(self, chat_id, content, reply_to_id):
+    def create_message(self, chat_id, content, reply_to_id, attachment_ids=None):
         msg = Message.objects.create(
             chat_id=chat_id,
             sender=self.user,
             content=content,
             reply_to_id = reply_to_id
         )
+
+        if attachment_ids:
+            updated = Attachment.objects.filter(
+                id__in=attachment_ids,
+                uploaded_by=self.user,
+                message__isnull=True,
+            ).update(message=msg)
+
+            if updated != len(attachment_ids):
+                raise ValueError("Failed to bind attachments")
 
         # increment unread for OTHER participant
         ChatParticipant.objects.filter(chat_id=chat_id).exclude(user=self.user).update(
@@ -266,6 +286,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def serialize_message(self, msg):
+        attachments = [
+            {
+                "id": att.id,
+                "url": att.file.url,
+                "download_url": f"/chat/attachments/{att.id}/download/",
+                "type": att.type,
+                "content_type": att.content_type,
+                "size": att.size,
+            }
+            for att in Attachment.objects.filter(message_id=msg.id)
+        ]
+
         return {
             "id": msg.id,
             "chat_id": msg.chat.id,
@@ -281,8 +313,32 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "content": msg.reply_to.content
                 }
                 if msg.reply_to else None
-            )
+            ),
+            "attachments": attachments,
         }
+
+    @database_sync_to_async
+    def validate_attachments(self, attachment_ids):
+        if not attachment_ids:
+            return []
+
+        try:
+            ids = [int(x) for x in attachment_ids]
+        except (TypeError, ValueError):
+            raise ValueError("invalid attachment ids")
+
+        attachments = list(
+            Attachment.objects.filter(
+                id__in=ids,
+                uploaded_by=self.user,
+                message__isnull=True,
+            ).values_list("id", flat=True)
+        )
+
+        if len(attachments) != len(ids):
+            raise ValueError("some attachments invalid")
+
+        return ids
     
     @database_sync_to_async
     def mark_as_read(self, chat_id, user_id):
