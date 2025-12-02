@@ -52,7 +52,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 chat_id=data.get("chat_id"),
                 recipient_id=data.get("recipient_id"),
                 content=data.get("message"),
-                reply_to_id=data.get("reply_to_id")
+                reply_to_id=data.get("reply_to_id"),
+                attachment_ids=data.get("attachment_ids")
             )
 
         if action == "mark_read":
@@ -95,15 +96,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # ACTION: SEND MESSAGE (existing or new chat)
     # --------------------------------------------------------
     async def send_message_action(self, chat_id, recipient_id, content, reply_to_id, attachment_ids=None):
-        if not content or not content.strip():
-            return await self.send_error("empty_message")
-
-        content = content.strip()
+        content = (content or "").strip()
 
         # normalize attachments
         attachment_ids = attachment_ids or []
         if not isinstance(attachment_ids, list):
             return await self.send_error("invalid_attachments")
+
+        if not content and not attachment_ids:
+            return await self.send_error("empty_message")
 
         # Case 1: Existing chat
         if chat_id:
@@ -134,7 +135,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except ValueError:
             return await self.send_error("invalid_attachments")
 
-        msg = await self.create_message(chat_id, content, reply_to_id, validated_attachment_ids)
+        try:
+            msg = await self.create_message(chat_id, content, reply_to_id, validated_attachment_ids)
+        except ValueError:
+            return await self.send_error("invalid_attachments")
         serialized = await self.serialize_message(msg)
 
         # sending message to chat window
