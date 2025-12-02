@@ -49,12 +49,13 @@ class ChatSerializer(serializers.ModelSerializer):
     def get_last_message(self, obj):
         # Prefer annotated fields from ChatListView to avoid extra queries
         if getattr(obj, "last_message_id", None):
+            timestamp = getattr(obj, "last_message_time", None) or getattr(obj, "last_message_created", None)
             return {
                 "id": obj.last_message_id,
                 "sender": obj.last_message_sender_id,
                 "sender_name": obj.last_message_sender_name,
                 "content": obj.last_message_content,
-                "timestamp": obj.last_message_time,
+                "timestamp": timestamp,
                 "is_read": obj.last_message_is_read,
             }
 

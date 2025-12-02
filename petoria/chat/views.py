@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.db.models import OuterRef, Subquery
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from .serializers import ChatSerializer, MessageSerializer
 from .paginations import MessageCursorPagination, ChatCursorPagination
 
@@ -33,8 +34,6 @@ class ChatListView(generics.ListAPIView):
                 last_message_id=Subquery(latest_msg.values("id")[:1]),
                 last_message_content=Subquery(latest_msg.values("content")[:1]),
                 last_message_created=Subquery(latest_msg.values("timestamp")[:1]),
-                # used by serializer + pagination
-                last_message_time=Subquery(latest_msg.values("timestamp")[:1]),
                 last_message_sender_id=Subquery(latest_msg.values("sender_id")[:1]),
                 last_message_sender_name=Subquery(latest_msg.values("sender__username")[:1]),
                 last_message_is_read=Subquery(latest_msg.values("is_read")[:1]),
@@ -53,6 +52,10 @@ class ChatMessagesListView(generics.ListAPIView):
 
     def get_queryset(self):
         chat_id = self.kwargs.get("chat_pk")
+
+        # ensure requester is a participant
+        if not Chat.objects.filter(id=chat_id, participants=self.request.user).exists():
+            raise PermissionDenied("not_in_chat")
         return (
             Message.objects.filter(chat_id=chat_id)
             .select_related("sender")

@@ -235,13 +235,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_or_create_chat(self, user1, user2):
-        chat = Chat.get_chat_between(user1, user2)
-        if chat:
-            return chat
-       
-        chat = Chat.objects.create()
-        ChatParticipant.objects.create(chat=chat, user=user1)
-        ChatParticipant.objects.create(chat=chat, user=user2)
+        pair_key = Chat.make_pair_key(user1, user2)
+        chat, created = Chat.objects.get_or_create(pair_key=pair_key)
+
+        # ensure participants exist (idempotent for existing chats)
+        ChatParticipant.objects.get_or_create(chat=chat, user=user1)
+        ChatParticipant.objects.get_or_create(chat=chat, user=user2)
+
         return chat
 
     @database_sync_to_async
