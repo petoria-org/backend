@@ -4,6 +4,7 @@ from .views import (
     ChatMessagesListView,
     ChatWithUserAPIView,
     AttachmentUploadView,
+    AttachmentDownloadView,
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('messages/<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
     path("with/", ChatWithUserAPIView.as_view(), name="chat-with-user"),
     path('attachments/upload/', AttachmentUploadView.as_view(), name='chat-attachment-upload'),
+    path('attachments/<int:attachment_id>/download/', AttachmentDownloadView.as_view(), name='chat-attachment-download'),
 ]

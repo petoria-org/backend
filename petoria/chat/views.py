@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.http import FileResponse
 from .serializers import ChatSerializer, MessageSerializer, AttachmentSerializer
 from .paginations import MessageCursorPagination, ChatCursorPagination
 from .enums import AttachmentType
@@ -98,6 +99,44 @@ class AttachmentUploadView(APIView):
 
         serializer = AttachmentSerializer(attachment, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# ------------------------------------------------------------
+# AttachmentDownloadView
+# Download an attachment if the requester is a chat participant
+# ------------------------------------------------------------
+class AttachmentDownloadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, attachment_id, *args, **kwargs):
+        try:
+            attachment = Attachment.objects.select_related(
+                "message__chat"
+            ).get(id=attachment_id)
+        except Attachment.DoesNotExist:
+            return Response({"error": "not_found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # ensure the attachment is bound to a message and user is in the chat
+        if not attachment.message:
+            return Response({"error": "unbound_attachment"}, status=status.HTTP_400_BAD_REQUEST)
+
+        chat = attachment.message.chat
+        if not chat.participants.filter(id=request.user.id).exists():
+            return Response({"error": "not_in_chat"}, status=status.HTTP_403_FORBIDDEN)
+
+        # stream the file
+        try:
+            file_handle = attachment.file.open("rb")
+        except FileNotFoundError:
+            return Response({"error": "file_missing"}, status=status.HTTP_404_NOT_FOUND)
+
+        response = FileResponse(
+            file_handle,
+            content_type=attachment.content_type or "application/octet-stream",
+        )
+        response["Content-Length"] = attachment.size
+        response["Content-Disposition"] = f'inline; filename="{attachment.file.name.split("/")[-1]}"'
+        return response
 
 # ------------------------------------------------------------
 # ChatWithUserAPIView
