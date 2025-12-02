@@ -1,13 +1,15 @@
 from users.models import User
-from .models import Chat, Message
+from .models import Chat, Message, Attachment
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import OuterRef, Subquery
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
-from .serializers import ChatSerializer, MessageSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from .serializers import ChatSerializer, MessageSerializer, AttachmentSerializer
 from .paginations import MessageCursorPagination, ChatCursorPagination
+from .enums import AttachmentType
 
 # ------------------------------------------------------------
 # ChatListView
@@ -61,6 +63,41 @@ class ChatMessagesListView(generics.ListAPIView):
             .select_related("sender")
             .order_by("-timestamp")  # newest first (pagination friendly)
         )
+
+
+# ------------------------------------------------------------
+# AttachmentUploadView
+# Upload an attachment (image/video/other) and return metadata
+# ------------------------------------------------------------
+class AttachmentUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            return Response({'error': 'missing_file'}, status=status.HTTP_400_BAD_REQUEST)
+
+        content_type = uploaded.content_type or ''
+        size = uploaded.size
+
+        if content_type.startswith('image/'):
+            attach_type = AttachmentType.IMAGE
+        elif content_type.startswith('video/'):
+            attach_type = AttachmentType.VIDEO
+        else:
+            attach_type = AttachmentType.OTHER
+
+        attachment = Attachment.objects.create(
+            uploaded_by=request.user,
+            file=uploaded,
+            content_type=content_type,
+            size=size,
+            type=attach_type,
+        )
+
+        serializer = AttachmentSerializer(attachment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # ------------------------------------------------------------
 # ChatWithUserAPIView

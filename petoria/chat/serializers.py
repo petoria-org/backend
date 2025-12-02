@@ -1,6 +1,30 @@
 from rest_framework import serializers
 from users.models import User
-from .models import Chat, Message, ChatParticipant
+from .models import Chat, Message, ChatParticipant, Attachment
+from .enums import AttachmentType
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Attachment
+        fields = [
+            'id',
+            'url',
+            'type',
+            'content_type',
+            'size',
+            'created_at',
+            'message',
+        ]
+        read_only_fields = ['id', 'url', 'type', 'content_type', 'size', 'created_at', 'message']
+
+    def get_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.file.url)
+        return obj.file.url
 
 class MessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.CharField(source='sender.username', read_only=True)
