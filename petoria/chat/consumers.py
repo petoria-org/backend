@@ -105,10 +105,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if not await self.is_user_in_chat(chat_id):
                 return await self.send_error("not_in_chat")
 
+            if reply_to_id and not await self.is_message_in_chat(reply_to_id, chat_id):
+                return await self.send_error("invalid_reply_target")
+
         # Case 2: First message → recipient_id required
         elif not recipient_id:
             return await self.send_error("missing_recipient_id")
-        
+
         else:
             try: recipient = await self.get_user(recipient_id)
             
@@ -117,6 +120,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             chat = await self.get_or_create_chat(self.user, recipient)
             chat_id = chat.id
+
+            if reply_to_id:
+                return await self.send_error("invalid_reply_target")
 
         msg = await self.create_message(chat_id, content, reply_to_id)
         serialized = await self.serialize_message(msg)
@@ -237,6 +243,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ChatParticipant.objects.create(chat=chat, user=user1)
         ChatParticipant.objects.create(chat=chat, user=user2)
         return chat
+
+    @database_sync_to_async
+    def is_message_in_chat(self, message_id, chat_id):
+        return Message.objects.filter(id=message_id, chat_id=chat_id).exists()
 
     @database_sync_to_async
     def create_message(self, chat_id, content, reply_to_id):

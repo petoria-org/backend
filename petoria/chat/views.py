@@ -22,7 +22,7 @@ class ChatListView(generics.ListAPIView):
 
         # Latest message subquery
         latest_msg = (
-            Message.objects.filter(chat_id=OuterRef("pk")).order_by("-created_at")
+            Message.objects.filter(chat_id=OuterRef("pk")).order_by("-timestamp")
         )
 
         return (
@@ -32,7 +32,12 @@ class ChatListView(generics.ListAPIView):
             .annotate(
                 last_message_id=Subquery(latest_msg.values("id")[:1]),
                 last_message_content=Subquery(latest_msg.values("content")[:1]),
-                last_message_created=Subquery(latest_msg.values("created_at")[:1]),
+                last_message_created=Subquery(latest_msg.values("timestamp")[:1]),
+                # used by serializer + pagination
+                last_message_time=Subquery(latest_msg.values("timestamp")[:1]),
+                last_message_sender_id=Subquery(latest_msg.values("sender_id")[:1]),
+                last_message_sender_name=Subquery(latest_msg.values("sender__username")[:1]),
+                last_message_is_read=Subquery(latest_msg.values("is_read")[:1]),
             )
             .order_by("-last_message_created")
         )
@@ -47,11 +52,11 @@ class ChatMessagesListView(generics.ListAPIView):
     pagination_class = MessageCursorPagination
 
     def get_queryset(self):
-        chat_id = self.kwargs.get("chat_id")
+        chat_id = self.kwargs.get("chat_pk")
         return (
             Message.objects.filter(chat_id=chat_id)
             .select_related("sender")
-            .order_by("-created_at")  # newest first (pagination friendly)
+            .order_by("-timestamp")  # newest first (pagination friendly)
         )
 
 # ------------------------------------------------------------

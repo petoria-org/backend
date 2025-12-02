@@ -47,6 +47,18 @@ class ChatSerializer(serializers.ModelSerializer):
 
     # Returns the most recent message (messages are pre-ordered)
     def get_last_message(self, obj):
+        # Prefer annotated fields from ChatListView to avoid extra queries
+        if getattr(obj, "last_message_id", None):
+            return {
+                "id": obj.last_message_id,
+                "sender": obj.last_message_sender_id,
+                "sender_name": obj.last_message_sender_name,
+                "content": obj.last_message_content,
+                "timestamp": obj.last_message_time,
+                "is_read": obj.last_message_is_read,
+            }
+
+        # Fallback for contexts without annotations
         last_msg = obj.messages.first()
         return MessageSerializer(last_msg).data if last_msg else None
 
