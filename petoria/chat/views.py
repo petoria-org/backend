@@ -12,6 +12,19 @@ from .serializers import ChatSerializer, MessageSerializer, AttachmentSerializer
 from .paginations import MessageCursorPagination, ChatCursorPagination
 from .enums import AttachmentType
 
+MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024  # 20 MB
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+}
+ALLOWED_VIDEO_TYPES = {
+    "video/mp4",
+    "video/quicktime",
+    "video/x-matroska",
+}
+
 # ------------------------------------------------------------
 # ChatListView
 # Returns the list of chats for the authenticated user
@@ -79,15 +92,24 @@ class AttachmentUploadView(APIView):
         if not uploaded:
             return Response({'error': 'missing_file'}, status=status.HTTP_400_BAD_REQUEST)
 
-        content_type = uploaded.content_type or ''
+        content_type = (uploaded.content_type or '').lower()
         size = uploaded.size
 
-        if content_type.startswith('image/'):
+        if size > MAX_ATTACHMENT_SIZE:
+            return Response(
+                {'error': 'file_too_large', 'max_bytes': MAX_ATTACHMENT_SIZE},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if content_type in ALLOWED_IMAGE_TYPES:
             attach_type = AttachmentType.IMAGE
-        elif content_type.startswith('video/'):
+        elif content_type in ALLOWED_VIDEO_TYPES:
             attach_type = AttachmentType.VIDEO
         else:
-            attach_type = AttachmentType.OTHER
+            return Response(
+                {'error': 'unsupported_file_type'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         attachment = Attachment.objects.create(
             uploaded_by=request.user,
