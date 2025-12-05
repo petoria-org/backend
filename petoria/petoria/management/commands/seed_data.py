@@ -1,6 +1,7 @@
 # Django Tools
 from django.core.management.base import BaseCommand
 from django.contrib.gis.geos import Point
+from django.utils import timezone
 
 # Models
 from users.models import User
@@ -60,9 +61,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.WARNING("Seeding database..."))
         self.generate_users(kwargs["users"])
+        self.generate_locations(kwargs["locations"])
         self.generate_posts(kwargs["posts"])
         self.generate_chats(kwargs["chat"])
-        self.generate_locations(kwargs["locations"])
         self.stdout.write(self.style.SUCCESS("\nSeeding complete!"))
 
     # -----------------------------------------
@@ -94,13 +95,67 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Created {count} users."))
 
     def generate_posts(self, count):
-        ...
-        # self.stdout.write(self.style.SUCCESS(f"Created {count} posts."))
+        for _ in range(count):
+            i = self._faker.random_int()
+            unique_loc = self._generate_single_location()
+            LostFoundPost.objects.create(
+                title=f"Lost Pet #{i}",
+                description="A sample lost pet post.",
+                user=random.choice(User.objects.all()),
+                location=unique_loc,
+                pet_type="cat",
+                pet_sex="male",
+                pet_name=f"Cat{i}",
+                contact_phone=random_phone(),
+            )
+
+            unique_loc = self._generate_single_location()
+            AdaptionPost.objects.create(
+                title=f"Adoption Post #{i}",
+                description="A sample adoption post.",
+                user=random.choice(User.objects.all()),
+                location=unique_loc,
+                pet_type="dog",
+                pet_sex="female",
+                pet_name=f"Dog{i}",
+                contact_phone=random_phone(),
+            )
+        for case in ["lostfound", "adaption"]:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Created {count} {case} posts + one new (unique) location for each"
+                )
+            )
+
+    def _generate_single_location(self):
+        return Location.objects.create(
+            point=iran_random_point(),
+            address=f"Sample Address {iran_random_point()}",
+            city="Tehran",
+            country="Iran",
+        )
 
     def generate_locations(self, count):
-        ...
-        # self.stdout.write(self.style.SUCCESS(f"Created {count} locations."))
+        for _ in range(count):
+            self._generate_single_location()
+
+        self.stdout.write(self.style.SUCCESS(f"Created {count} locations."))
 
     def generate_chats(self, count):
-        ...
-        # self.stdout.write(self.style.SUCCESS(f"Created {count} chats."))
+        users = list(User.objects.all())
+        for _ in range(count):
+            u1, u2 = random.sample(users, 2)  # type: ignore
+            chat = Chat.objects.create()
+            ChatParticipant.objects.create(chat=chat, user=u1)
+            ChatParticipant.objects.create(chat=chat, user=u2)
+
+            # Messages inside each chat
+            for _ in range(random.randint(3, 15)):
+                Message.objects.create(
+                    chat=chat,
+                    sender=random.choice([u1, u2]),
+                    content=self._faker.bs(),
+                    timestamp=timezone.now(),
+                )
+
+        self.stdout.write(self.style.SUCCESS(f"Created {count} chats."))
