@@ -51,7 +51,6 @@ LOCAL_APPS = [
     "posts",
     "users",
     "locations",
-    "petoria",
 ]
 
 INSTALLED_APPS = (

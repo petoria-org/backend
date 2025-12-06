@@ -7,7 +7,7 @@ from django.utils import timezone
 from users.models import User
 from locations.models import Location
 from chat.models import Chat, ChatParticipant, Message
-from posts.models import LostFoundPost, AdaptionPost
+from posts.models import Found_post, Lost_post, Surrender_custody_pets
 
 # Etc.
 from petoria.settings import LOCAL_APPS
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         for _ in range(count):
             i = self._faker.random_int()
             unique_loc = self._generate_single_location()
-            LostFoundPost.objects.create(
+            Found_post.objects.create(
                 title=f"Lost Pet #{i}",
                 description="A sample lost pet post.",
                 user=random.choice(User.objects.all()),
@@ -110,7 +110,7 @@ class Command(BaseCommand):
             )
 
             unique_loc = self._generate_single_location()
-            AdaptionPost.objects.create(
+            Surrender_custody_pets.objects.create(
                 title=f"Adoption Post #{i}",
                 description="A sample adoption post.",
                 user=random.choice(User.objects.all()),

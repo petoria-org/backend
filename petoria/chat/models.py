@@ -38,6 +38,7 @@ class Chat(models.Model):
         )
 
 
+
 class ChatParticipant(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='participants_info')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -46,6 +47,7 @@ class ChatParticipant(models.Model):
     
     class Meta:
         unique_together = ('chat', 'user')
+
 
 
 
