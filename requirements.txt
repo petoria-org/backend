@@ -16,6 +16,7 @@ django-imagekit==6.0.0
 django-js-asset==3.1.2
 django-phonenumber-field==8.3.0
 djangorestframework==3.16.1
+Faker==38.2.0
 hyperlink==21.0.0
 idna==3.11
 incremental==24.7.2
