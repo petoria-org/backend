@@ -126,7 +126,7 @@ else:
     # Spatialite configuration
     DATABASES = {
         'default': {
-            'ENGINGINE': 'django.contrib.gis.db.backends.spatialite',
+            'ENGINE': 'django.contrib.gis.db.backends.spatialite',
             'NAME': BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3'),
         }
     }
