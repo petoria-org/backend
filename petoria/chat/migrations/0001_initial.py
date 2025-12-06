@@ -10,7 +10,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -51,6 +50,21 @@ class Migration(migrations.Migration):
                 ('is_read', models.BooleanField(default=False)),
                 ('chat', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='chat.chat')),
                 ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_messages', to=settings.AUTH_USER_MODEL)),
+                ('content', models.TextField()),
+                ('timestamp', models.DateTimeField(auto_now_add=True)),
+                ('is_read', models.BooleanField(default=False)),
+            ],
+            options={
+                'ordering': ['-timestamp'],
+            },
+        ),
+        migrations.CreateModel(
+            name='ChatParticipant',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('joined_at', models.DateTimeField(auto_now_add=True)),
+                ('unread_count', models.IntegerField(default=0)),
+                ('chat', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='participants_info', to='chat.chat')),
             ],
             options={
                 'ordering': ['-timestamp'],

@@ -13,7 +13,7 @@ class Chat(models.Model):
     participants = models.ManyToManyField(User, through='ChatParticipant')
     pair_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
     
@@ -37,6 +37,7 @@ class Chat(models.Model):
             .first()
         )
 
+
 class ChatParticipant(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='participants_info')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -45,6 +46,7 @@ class ChatParticipant(models.Model):
     
     class Meta:
         unique_together = ('chat', 'user')
+
 
 
 class Message(models.Model):
