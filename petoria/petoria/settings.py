@@ -148,7 +148,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
-GDAL_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgdal.so.34'
+
+# GDAL_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgdal.so.34'
 # GDAL_LIBRARY_PATH = "/opt/homebrew/Cellar/gdal/3.12.0/lib/libgdal.dylib"
 
 REST_FRAMEWORK = {
