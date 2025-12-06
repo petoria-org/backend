@@ -14,17 +14,18 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables
+load_dotenv(BASE_DIR.parent.joinpath("example.env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-3zmj3sfqz9@@h^l6_vxi=t0bv$isrx=+9wmy@$@bu27s1$m-dm"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -42,6 +43,7 @@ THIRD_PARTY_APPS = [
     "django_extensions",
     "channels",
     "imagekit",
+    "daphne",
 ]
 
 LOCAL_APPS = [
@@ -53,18 +55,17 @@ LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = (
-    [
-        "daphne",
-        "django.contrib.admin",
+    THIRD_PARTY_APPS
+    + LOCAL_APPS
+    + [
         "django.contrib.auth",
+        "django.contrib.admin",
         "django.contrib.contenttypes",
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
         "django.contrib.gis",
     ]
-    + THIRD_PARTY_APPS
-    + LOCAL_APPS
 )
 
 MIDDLEWARE = [
@@ -100,34 +101,34 @@ CACHES = {
     }
 }
 
-ASGI_APPLICATION = 'petoria.asgi.application'
-WSGI_APPLICATION = 'petoria.wsgi.application'
+ASGI_APPLICATION = "petoria.asgi.application"
+WSGI_APPLICATION = "petoria.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
 # Get database type from environment variable
-DB_TYPE = os.getenv('DB_TYPE', 'spatialite').lower()
+DB_TYPE = os.getenv("DB_TYPE", "spatialite").lower()
 
-if DB_TYPE == 'postgis':
+if DB_TYPE == "postgis":
     # PostgreSQL/PostGIS configuration
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': os.getenv('DB_NAME', 'petoria_db'),
-            'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": os.getenv("DB_NAME", "petoria_db"),
+            "USER": os.getenv("DB_USER", "postgres"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
         }
     }
 else:
     # Spatialite configuration
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.spatialite',
-            'NAME': BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3'),
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.spatialite",
+            "NAME": BASE_DIR / os.getenv("DB_NAME", "db.sqlite3"),
         }
     }
 
@@ -172,16 +173,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'users.User'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "users.User"
 
 # GDAL_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgdal.so.34'
 # GDAL_LIBRARY_PATH = "/opt/homebrew/Cellar/gdal/3.12.0/lib/libgdal.dylib"
@@ -195,9 +196,9 @@ REST_FRAMEWORK = {
     ],
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'youremail@gmail.com'
-EMAIL_HOST_PASSWORD = '12345'
+EMAIL_HOST_USER = "youremail@gmail.com"
+EMAIL_HOST_PASSWORD = "12345"
