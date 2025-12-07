@@ -1,10 +1,10 @@
 # Python
 __pycache__/
 *.pyc
+migrations
 
 # Environment
-venv/
-
+*venv*
 
 # Database
 *.sqlite3
