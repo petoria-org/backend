@@ -9,6 +9,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, EmailVerification
 from .serializers import LoginSerializer, SignupSerializer, VerifyOTPSerializer
@@ -21,6 +22,8 @@ def generate_otp_code() -> str:
 
 
 class SignupView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         serializer: SignupSerializer = SignupSerializer(data=request.data)
 
@@ -50,6 +53,8 @@ class SignupView(APIView):
 
 
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         serializer: VerifyOTPSerializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
@@ -82,6 +87,8 @@ class VerifyOTPView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         """
         Login user with username/email + password
@@ -99,11 +106,21 @@ class LoginView(APIView):
         if not user_auth:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # اگر لازم بود JWT یا token می‌سازیم
-        return Response({"message": "Login successful", "username": user.username}, status=status.HTTP_200_OK)
+        refresh = RefreshToken.for_user(user_auth)
+        return Response(
+            {
+                "message": "Login successful",
+                "username": user.username,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RequestOTPView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         """
         Request OTP code for login or forgot password
@@ -136,6 +153,8 @@ class RequestOTPView(APIView):
 
 
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         """
         Verify OTP and allow login or reset password
@@ -158,11 +177,24 @@ class VerifyOTPView(APIView):
         if otp.expires_at < timezone.now():
             return Response({"error": "OTP expired"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # mark OTP used and activate user if needed
         otp.is_used = True
         otp.save()
 
-        # برای ورود با OTP می‌توان یک flag برگرداند یا session/token ایجاد کرد
-        return Response({"message": "OTP verified, you can login or reset password now"}, status=status.HTTP_200_OK)
+        if not otp.user.is_active:
+            otp.user.is_active = True
+            otp.user.save()
+
+        refresh = RefreshToken.for_user(otp.user)
+        return Response(
+            {
+                "message": "OTP verified",
+                "username": otp.user.username,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 @permission_classes([AllowAny])
