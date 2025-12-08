@@ -18,7 +18,8 @@ from .serializers import LoginSerializer, SignupSerializer, VerifyOTPSerializer
 # Create your views here.
 
 def generate_otp_code() -> str:
-    return f"{random.randint(100000, 999999)}"
+    code = random.randint(1, 999999)
+    return f"{code:06d}"
 
 
 class SignupView(APIView):
@@ -28,10 +29,10 @@ class SignupView(APIView):
         serializer: SignupSerializer = SignupSerializer(data=request.data)
 
         if serializer.is_valid():
-            user: User = serializer.save()  # یوزر ساخته می‌شود ولی غیرفعال
+            user: User = serializer.save()  # user is created but not active
             # OTP
             code: str = generate_otp_code()
-            otp: EmailVerification = EmailVerification.objects.create(
+            EmailVerification.objects.create(
                 user=user,
                 email=user.email,
                 code=code,
@@ -75,7 +76,7 @@ class VerifyOTPView(APIView):
             if otp.expires_at < timezone.now():
                 return Response({"error": "OTP expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # OTP معتبر است، یوزر را فعال کن
+            # otp is valid -> activate the account
             otp.user.is_active = True
             otp.user.save()
             otp.is_used = True
@@ -133,7 +134,7 @@ class RequestOTPView(APIView):
         if not user:
             return Response({"error": "User with this email not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        code: str = f"{random.randint(100000, 999999)}"
+        code: str = generate_otp_code()
         EmailVerification.objects.create(
             user=user,
             email=email,
@@ -150,51 +151,6 @@ class RequestOTPView(APIView):
         )
 
         return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
-
-
-class VerifyOTPView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request) -> Response:
-        """
-        Verify OTP and allow login or reset password
-        """
-        serializer: VerifyOTPSerializer = VerifyOTPSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        email: str = serializer.validated_data['email']
-        code: str = serializer.validated_data['code']
-
-        try:
-            otp: EmailVerification = EmailVerification.objects.get(
-                user__email=email,
-                code=code,
-                is_used=False
-            )
-        except EmailVerification.DoesNotExist:
-            return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if otp.expires_at < timezone.now():
-            return Response({"error": "OTP expired"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # mark OTP used and activate user if needed
-        otp.is_used = True
-        otp.save()
-
-        if not otp.user.is_active:
-            otp.user.is_active = True
-            otp.user.save()
-
-        refresh = RefreshToken.for_user(otp.user)
-        return Response(
-            {
-                "message": "OTP verified",
-                "username": otp.user.username,
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            },
-            status=status.HTTP_200_OK,
-        )
 
 
 @permission_classes([AllowAny])

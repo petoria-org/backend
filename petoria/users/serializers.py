@@ -31,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.Serializer):
-    username: serializers.CharField = serializers.CharField(max_length=50)
+    username: serializers.CharField = serializers.CharField(max_length=150)
     email: serializers.EmailField = serializers.EmailField()
     password: serializers.CharField = serializers.CharField(write_only=True, min_length=6)
 
@@ -70,7 +70,6 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         identifier: str = attrs.get('identifier')
-        password: Optional[str] = attrs.get('password')
 
         # login with email or username
         user: Optional[User] = (
