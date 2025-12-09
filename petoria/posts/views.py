@@ -1,13 +1,110 @@
+from typing import Any, List, Dict
+
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Lost_post, Found_post, Surrender_custody_pets
 from .pagination import PostPagination
-from .serializers import (
-    LostPostSerializer,
-    FoundPostSerializer,
-    SurrenderCustodyPostSerializer
-)
+from .serializers import LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer
+
+
+class AllPosts(APIView):
+
+    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+        lost = Lost_post.objects.all().order_by("-created_at")
+        found = Found_post.objects.all().order_by("-created_at")
+        surrender = Surrender_custody_pets.objects.all().order_by("-created_at")
+
+        combined: List[Dict[str, Any]] = []
+
+        for obj in lost:
+            data = LostPostSerializer(obj).data
+            data["type"] = "lost"
+            combined.append(data)
+
+        for obj in found:
+            data = FoundPostSerializer(obj).data
+            data["type"] = "found"
+            combined.append(data)
+
+        for obj in surrender:
+            data = SurrenderCustodyPostSerializer(obj).data
+            data["type"] = "surrender"
+            combined.append(data)
+
+        combined = sorted(combined, key=lambda x: x["created_at"], reverse=True)
+
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(combined, request)
+        return paginator.get_paginated_response(page)
+
+
+class UserLostPostsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+        posts = Lost_post.objects.filter(user=request.user).order_by("-created_at")
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(posts, request)
+        serializer = LostPostSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class UserFoundPostsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+        posts = Found_post.objects.filter(user=request.user).order_by("-created_at")
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(posts, request)
+        serializer = FoundPostSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class UserSurrenderPostsAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+        posts = Surrender_custody_pets.objects.filter(user=request.user).order_by("-created_at")
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(posts, request)
+        serializer = SurrenderCustodyPostSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class AllPostsUser(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+
+        lost = Lost_post.objects.filter(user=user)
+        found = Found_post.objects.filter(user=user)
+        surrender = Surrender_custody_pets.objects.filter(user=user)
+
+        combined: List[Dict[str, Any]] = []
+
+        for obj in lost:
+            data = LostPostSerializer(obj).data
+            data["type"] = "lost"
+            combined.append(data)
+
+        for obj in found:
+            data = FoundPostSerializer(obj).data
+            data["type"] = "found"
+            combined.append(data)
+
+        for obj in surrender:
+            data = SurrenderCustodyPostSerializer(obj).data
+            data["type"] = "surrender"
+            combined.append(data)
+
+        combined = sorted(combined, key=lambda x: x["created_at"], reverse=True)
+
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(combined, request)
+        return paginator.get_paginated_response(page)
 
 
 # LIST + CREATE
