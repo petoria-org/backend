@@ -47,12 +47,18 @@ class SignupView(APIView):
                 expires_at=timezone.now() + timezone.timedelta(minutes=5)
             )
 
-            send_mail(
-                subject="OTP Code",
-                message=f"OTP code is: {code}",
-                from_email="noreply@yourdomain.com",
-                recipient_list=[user.email],
-            )
+            try:
+                send_mail(
+                    subject="OTP Code",
+                    message=f"OTP code is: {code}",
+                    from_email="noreply@yourdomain.com",
+                    recipient_list=[user.email],
+                )
+            except Exception:
+                return Response(
+                    {"error": "Failed to send OTP email. Please try again shortly."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
 
             return Response(
                 {"message": "User created. OTP sent to email."},
@@ -84,13 +90,19 @@ class RequestOTPView(APIView):
             expires_at=timezone.now() + timezone.timedelta(minutes=5)
         )
 
-        send_mail(
-            subject="Your OTP Code",
-            message=f"Your OTP code is: {code}",
-            from_email="noreply@yourdomain.com",
-            recipient_list=[email],
-            fail_silently=False
-        )
+        try:
+            send_mail(
+                subject="Your OTP Code",
+                message=f"Your OTP code is: {code}",
+                from_email="noreply@yourdomain.com",
+                recipient_list=[email],
+                fail_silently=False
+            )
+        except Exception:
+            return Response(
+                {"error": "Failed to send OTP email. Please try again shortly."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
 
@@ -149,6 +161,8 @@ class LoginView(APIView):
         user_auth: Optional[User] = authenticate(username=user.username, password=password)
         if not user_auth:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        if not user_auth.is_active:
+            return Response({"error": "Account is not active. Please verify your email."}, status=status.HTTP_403_FORBIDDEN)
 
         refresh = RefreshToken.for_user(user_auth)
         return Response(
@@ -171,16 +185,31 @@ class ResetPasswordView(APIView):
         Reset password after verifying OTP
         """
         email: str = request.data.get('email')
+        code: str = request.data.get('code')
         new_password: str = request.data.get('new_password')
 
-        if not email or not new_password:
-            return Response({"error": "Email and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not email or not code or not new_password:
+            return Response({"error": "Email, OTP code, and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
         user: Optional[User] = User.objects.filter(email=email, is_active=True).first()
         if not user:
             return Response({"error": "User not found or not active"}, status=status.HTTP_404_NOT_FOUND)
 
+        try:
+            otp: EmailVerification = EmailVerification.objects.get(
+                user=user,
+                code=code,
+                is_used=False
+            )
+        except EmailVerification.DoesNotExist:
+            return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if otp.expires_at < timezone.now():
+            return Response({"error": "OTP expired"}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
+        otp.is_used = True
+        otp.save()
 
         return Response({"message": "Password has been reset successfully"}, status=status.HTTP_200_OK)
