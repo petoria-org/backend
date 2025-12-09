@@ -21,6 +21,12 @@ def generate_otp_code() -> str:
     code = random.randint(1, 999999)
     return f"{code:06d}"
 
+def invalidate_previous_otps(user: User):
+    """
+    Ensure only the newest OTP remains valid by marking older unused codes as used.
+    """
+    EmailVerification.objects.filter(user=user, is_used=False).update(is_used=True)
+
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -33,6 +39,7 @@ class SignupView(APIView):
             user: User = serializer.save()
             # OTP
             code: str = generate_otp_code()
+            invalidate_previous_otps(user)
             EmailVerification.objects.create(
                 user=user,
                 email=user.email,
@@ -69,6 +76,7 @@ class RequestOTPView(APIView):
             return Response({"error": "User with this email not found"}, status=status.HTTP_404_NOT_FOUND)
 
         code: str = generate_otp_code()
+        invalidate_previous_otps(user)
         EmailVerification.objects.create(
             user=user,
             email=email,
@@ -156,7 +164,6 @@ class LoginView(APIView):
 
 
 
-@permission_classes([AllowAny])
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     def post(self, request) -> Response:
