@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -10,7 +10,7 @@ from .serializers import LostPostSerializer, FoundPostSerializer, SurrenderCusto
 
 
 class AllPosts(APIView):
-
+    permission_classes = [AllowAny]
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
         lost = Lost_post.objects.all().order_by("-created_at")
         found = Found_post.objects.all().order_by("-created_at")
@@ -109,6 +109,7 @@ class AllPostsUser(APIView):
 
 # LIST + CREATE
 class LostPostListAPI(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         posts = Lost_post.objects.all().order_by('-created_at')
 
@@ -128,6 +129,7 @@ class LostPostListAPI(APIView):
 
 # RETRIEVE + UPDATE + DELETE
 class LostPostDetailAPI(APIView):
+    permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
             return Lost_post.objects.get(pk=pk)
@@ -160,6 +162,7 @@ class LostPostDetailAPI(APIView):
 
 
 class FoundPostListAPI(APIView):
+    permission_classes=[AllowAny]
     def get(self, request):
         posts = Found_post.objects.all().order_by('-created_at')
 
@@ -178,6 +181,7 @@ class FoundPostListAPI(APIView):
 
 
 class FoundPostDetailAPI(APIView):
+    permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
             return Found_post.objects.get(pk=pk)
@@ -210,6 +214,7 @@ class FoundPostDetailAPI(APIView):
 
 
 class SurrenderCustodyListAPI(APIView):
+    permission_classes = [AllowAny]
     def get(self, request):
         posts = Surrender_custody_pets.objects.all().order_by('-created_at')
 
@@ -228,6 +233,7 @@ class SurrenderCustodyListAPI(APIView):
 
 
 class SurrenderCustodyDetailAPI(APIView):
+    permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
             return Surrender_custody_pets.objects.get(pk=pk)
