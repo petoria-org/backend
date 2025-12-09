@@ -14,6 +14,7 @@ from petoria.settings import LOCAL_APPS
 from datetime import UTC
 from faker import Faker
 import random, string
+from posts.enums import PetType
 
 
 # -----------------------------------------
@@ -122,7 +123,7 @@ class Command(BaseCommand):
         for _ in range(count):
             i = self._faker.random_int()
             unique_loc = next(self.generate_locations(1, False))
-            pet_type = random.choice([True, False])
+            pet_type = random.choice([PetType.CAT, PetType.DOG])
             pet_gender = random.choice(["male", "female"])
             Lost_post.objects.create(
                 user=random.choice(User.objects.all()),
