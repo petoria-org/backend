@@ -26,10 +26,11 @@ class SignupView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request) -> Response:
-        serializer: SignupSerializer = SignupSerializer(data=request.data)
+        serializer = SignupSerializer(data=request.data)
 
         if serializer.is_valid():
-            user: User = serializer.save()  # user is created but not active
+            # user is created but not active
+            user: User = serializer.save()
             # OTP
             code: str = generate_otp_code()
             EmailVerification.objects.create(
@@ -51,6 +52,40 @@ class SignupView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RequestOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request) -> Response:
+        """
+        Request OTP code for login or forgot password
+        """
+        email: str = request.data.get('email')
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user: Optional[User] = User.objects.filter(email=email).first()
+        if not user:
+            return Response({"error": "User with this email not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        code: str = generate_otp_code()
+        EmailVerification.objects.create(
+            user=user,
+            email=email,
+            code=code,
+            expires_at=timezone.now() + timezone.timedelta(minutes=5)
+        )
+
+        send_mail(
+            subject="Your OTP Code",
+            message=f"Your OTP code is: {code}",
+            from_email="noreply@yourdomain.com",
+            recipient_list=[email],
+            fail_silently=False
+        )
+
+        return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
+
 
 
 class VerifyOTPView(APIView):
@@ -119,42 +154,11 @@ class LoginView(APIView):
         )
 
 
-class RequestOTPView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request) -> Response:
-        """
-        Request OTP code for login or forgot password
-        """
-        email: str = request.data.get('email')
-        if not email:
-            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user: Optional[User] = User.objects.filter(email=email).first()
-        if not user:
-            return Response({"error": "User with this email not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        code: str = generate_otp_code()
-        EmailVerification.objects.create(
-            user=user,
-            email=email,
-            code=code,
-            expires_at=timezone.now() + timezone.timedelta(minutes=5)
-        )
-
-        send_mail(
-            subject="Your OTP Code",
-            message=f"Your OTP code is: {code}",
-            from_email="noreply@yourdomain.com",
-            recipient_list=[email],
-            fail_silently=False
-        )
-
-        return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
 
 
 @permission_classes([AllowAny])
 class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request) -> Response:
         """
         Reset password after verifying OTP
