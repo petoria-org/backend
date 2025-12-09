@@ -110,7 +110,7 @@ class Command(BaseCommand):
                 phone=random_phone(),
                 first_name=full_name[0],
                 last_name=full_name[-1],
-                dis_email_verified=True,
+                is_email_verified=True,
             )
 
         self.stdout.write(self.style.SUCCESS(f"Created {count} users."))

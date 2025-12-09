@@ -85,7 +85,7 @@ class User(AbstractUser):
         related_name='user'
     )
 
-    dis_email_verified: models.BooleanField = models.BooleanField(default=False)
+    is_email_verified: models.BooleanField = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.username}"
