@@ -107,7 +107,7 @@ class Command(BaseCommand):
                 profile_picture=self._faker.image_url(),
                 location=next(self.generate_locations(1, False)),
                 email=str(fu["mail"]),
-                password=self._faker.password(),
+                password='password',
                 phone=random_phone(),
                 first_name=full_name[0],
                 last_name=full_name[-1],
