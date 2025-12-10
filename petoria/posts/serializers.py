@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from phonenumber_field.phonenumber import PhoneNumber
 from locations.serializers import LocationSerializer
+from locations.models import Location
 from .models import Lost_post, Found_post, Surrender_custody_pets, PostImage
 
 
@@ -44,6 +45,44 @@ class BasePostSerializer(serializers.ModelSerializer):
                     "City or country must be provided when location is given."
                 )
         return data
+
+    def _handle_location(self, instance, location_data):
+        """
+        Create or update the related Location from nested data.
+        """
+        if location_data is None:
+            return instance.location if instance else None
+
+        if instance and instance.location:
+            # Update existing location
+            for attr, value in location_data.items():
+                setattr(instance.location, attr, value)
+            instance.location.save()
+            return instance.location
+
+        # Create a new location
+        return Location.objects.create(**location_data)
+
+    def create(self, validated_data):
+        location_data = validated_data.pop("location", None)
+
+        # Attach request user if available; otherwise expect client to provide
+        request = self.context.get("request") if hasattr(self, "context") else None
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            validated_data.setdefault("user", request.user)
+
+        location = self._handle_location(instance=None, location_data=location_data)
+        return self.Meta.model.objects.create(location=location, **validated_data)
+
+    def update(self, instance, validated_data):
+        location_data = validated_data.pop("location", None)
+        if location_data is not None:
+            instance.location = self._handle_location(instance, location_data)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 # ------------------------------

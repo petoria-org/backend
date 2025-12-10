@@ -120,7 +120,7 @@ class LostPostListAPI(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
-        serializer = LostPostSerializer(data=request.data)
+        serializer = LostPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
@@ -173,7 +173,7 @@ class FoundPostListAPI(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
-        serializer = FoundPostSerializer(data=request.data)
+        serializer = FoundPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
@@ -225,7 +225,7 @@ class SurrenderCustodyListAPI(APIView):
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
-        serializer = SurrenderCustodyPostSerializer(data=request.data)
+        serializer = SurrenderCustodyPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
