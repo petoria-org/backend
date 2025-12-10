@@ -28,24 +28,6 @@ class BasePostSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at", "images"]
 
-    def validate_contact_phone(self, phone):
-        if phone:
-            try:
-                parsed = PhoneNumber.from_string(phone)
-                if not parsed.is_valid():
-                    raise serializers.ValidationError("Invalid international phone number.")
-            except Exception:
-                raise serializers.ValidationError("Invalid phone number format.")
-        return phone
-
-    def validate_contact_email(self, email):
-        if email:
-            try:
-                validate_email(email)
-            except DjangoValidationError:
-                raise serializers.ValidationError("Invalid email address.")
-        return email
-
     def validate(self, data):
         location_data = data.get("location")
         model_name = self.Meta.model.__name__
