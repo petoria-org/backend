@@ -1,16 +1,16 @@
 from django.urls import path
 from .views import (
-    ChatListView,
-    ChatMessagesListView,
-    ChatWithUserAPIView,
-    AttachmentUploadView,
-    AttachmentDownloadView,
+    ChatListAPI,
+    ChatMessagesListAPI,
+    ChatWithUserAPI,
+    AttachmentUploadAPI,
+    AttachmentDownloadAPI,
 )
 
 urlpatterns = [
-    path('list/', ChatListView.as_view(), name='chat-list'),
-    path('messages/<int:chat_pk>/', ChatMessagesListView.as_view(), name='chat-messages'),
-    path("with/", ChatWithUserAPIView.as_view(), name="chat-with-user"),
-    path('attachments/upload/', AttachmentUploadView.as_view(), name='chat-attachment-upload'),
-    path('attachments/<int:attachment_id>/download/', AttachmentDownloadView.as_view(), name='chat-attachment-download'),
+    path('list/', ChatListAPI.as_view(), name='chat-list'),
+    path('messages/<int:chat_pk>/', ChatMessagesListAPI.as_view(), name='chat-messages'),
+    path("with/<int:user_id>/", ChatWithUserAPI.as_view(), name="chat-with-user"),
+    path('attachments/upload/', AttachmentUploadAPI.as_view(), name='chat-attachment-upload'),
+    path('attachments/<int:attachment_id>/download/', AttachmentDownloadAPI.as_view(), name='chat-attachment-download'),
 ]
