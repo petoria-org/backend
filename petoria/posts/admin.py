@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Lost_post, Found_post, Surrender_custody_pets
+from .models import LostPost, FoundPost, SurrenderCustodyPet
 
 # Register your models here.
-admin.site.register(Lost_post)
-admin.site.register(Found_post)
-admin.site.register(Surrender_custody_pets)
+admin.site.register(LostPost)
+admin.site.register(FoundPost)
+admin.site.register(SurrenderCustodyPet)

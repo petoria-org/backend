@@ -5,7 +5,7 @@ from phonenumber_field.phonenumber import PhoneNumber
 from django.contrib.gis.geos import Point
 from locations.serializers import LocationSerializer
 from locations.models import Location
-from .models import Lost_post, Found_post, Surrender_custody_pets, PostImage
+from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -35,7 +35,7 @@ class BasePostSerializer(serializers.ModelSerializer):
         model_name = self.Meta.model.__name__
 
         # Lost_post must have a location
-        if model_name == "Lost_post" and not location_data:
+        if model_name == "LostPost" and not location_data:
             raise serializers.ValidationError(
                 "Location is required for lost-pet posts."
             )
@@ -96,19 +96,19 @@ class BasePostSerializer(serializers.ModelSerializer):
 # ------------------------------
 class LostPostSerializer(BasePostSerializer):
     class Meta(BasePostSerializer.Meta):
-        model = Lost_post
+        model = LostPost
         fields = BasePostSerializer.Meta.fields + ["lost_time"]
 
 
 class FoundPostSerializer(BasePostSerializer):
     class Meta(BasePostSerializer.Meta):
-        model = Found_post
+        model = FoundPost
         fields = BasePostSerializer.Meta.fields + ["found_time"]
 
 
 class SurrenderCustodyPostSerializer(BasePostSerializer):
     class Meta(BasePostSerializer.Meta):
-        model = Surrender_custody_pets
+        model = SurrenderCustodyPet
         fields = BasePostSerializer.Meta.fields + [
             "diseases",
             "has_birth_certificate",
@@ -125,7 +125,7 @@ class LostPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
 
     class Meta:
-        model = Lost_post
+        model = LostPost
         fields = ["id", "title", "pet_type", "lost_time", "thumbnail"]
 
     def get_thumbnail(self, obj):
@@ -138,7 +138,7 @@ class FoundPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
 
     class Meta:
-        model = Found_post
+        model = FoundPost
         fields = ["id", "title", "pet_type", "found_time", "thumbnail"]
 
     def get_thumbnail(self, obj):
@@ -151,7 +151,7 @@ class SurrenderPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
 
     class Meta:
-        model = Surrender_custody_pets
+        model = SurrenderCustodyPet
         fields = ["id", "title", "pet_type", "thumbnail"]
 
     def get_thumbnail(self, obj):

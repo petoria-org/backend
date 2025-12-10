@@ -209,14 +209,14 @@ class BasePost(models.Model):
 
     def clean(self):
         #  location validation
-        if isinstance(self, Lost_post):
+        if isinstance(self, LostPost):
             if not self.location or not (
                     self.location.point or self.location.city or self.location.country
             ):
                 raise ValidationError(
                     "For lost pets, you must provide a location (coordinates or at least city/country)."
                 )
-        elif isinstance(self, (Found_post, Surrender_custody_pets)):
+        elif isinstance(self, (FoundPost, SurrenderCustodyPet)):
             if self.location and not (
                     self.location.point or self.location.city or self.location.country
             ):
@@ -225,7 +225,7 @@ class BasePost(models.Model):
                 )
 
 
-class Found_post(BasePost):
+class FoundPost(BasePost):
     """
     Represents a found-pet report.
 
@@ -240,7 +240,7 @@ class Found_post(BasePost):
     )
 
 
-class Lost_post(BasePost):
+class LostPost(BasePost):
     """
     Represents a lost-pet report.
 
@@ -255,7 +255,7 @@ class Lost_post(BasePost):
     )
 
 
-class Surrender_custody_pets(BasePost):
+class SurrenderCustodyPet(BasePost):
     """
     Represents a pet being surrendered or offered for adoption.
 

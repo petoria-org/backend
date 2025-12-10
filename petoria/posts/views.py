@@ -1,20 +1,22 @@
 from typing import Any, List, Dict
 
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Lost_post, Found_post, Surrender_custody_pets
+from .models import LostPost, FoundPost, SurrenderCustodyPet
 from .pagination import PostPagination
 from .serializers import LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer
 
+class ListAllPostsUserAPI(APIView):
+    permission_classes = [IsAuthenticated]
 
-class AllPosts(APIView):
-    permission_classes = [AllowAny]
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
-        lost = Lost_post.objects.all().order_by("-created_at")
-        found = Found_post.objects.all().order_by("-created_at")
-        surrender = Surrender_custody_pets.objects.all().order_by("-created_at")
+        user = request.user
+
+        lost = LostPost.objects.filter(user=user)
+        found = FoundPost.objects.filter(user=user)
+        surrender = SurrenderCustodyPet.objects.filter(user=user)
 
         combined: List[Dict[str, Any]] = []
 
@@ -38,50 +40,47 @@ class AllPosts(APIView):
         paginator = PostPagination()
         page = paginator.paginate_queryset(combined, request)
         return paginator.get_paginated_response(page)
+    
 
-
-class UserLostPostsAPI(APIView):
+class ListUserLostPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
-        posts = Lost_post.objects.filter(user=request.user).order_by("-created_at")
+        posts = LostPost.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = LostPostSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
-class UserFoundPostsAPI(APIView):
+class ListUserFoundPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
-        posts = Found_post.objects.filter(user=request.user).order_by("-created_at")
+        posts = FoundPost.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = FoundPostSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
-class UserSurrenderPostsAPI(APIView):
+class ListUserCustodyPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
-        posts = Surrender_custody_pets.objects.filter(user=request.user).order_by("-created_at")
+        posts = SurrenderCustodyPet.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = SurrenderCustodyPostSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
-class AllPostsUser(APIView):
-    permission_classes = [IsAuthenticated]
-
+class ListAllPostsAPI(APIView):
+    permission_classes = [AllowAny]
     def get(self, request, *args: Any, **kwargs: Any) -> Response:
-        user = request.user
-
-        lost = Lost_post.objects.filter(user=user)
-        found = Found_post.objects.filter(user=user)
-        surrender = Surrender_custody_pets.objects.filter(user=user)
+        lost = LostPost.objects.all().order_by("-created_at")
+        found = FoundPost.objects.all().order_by("-created_at")
+        surrender = SurrenderCustodyPet.objects.all().order_by("-created_at")
 
         combined: List[Dict[str, Any]] = []
 
@@ -106,12 +105,12 @@ class AllPostsUser(APIView):
         page = paginator.paginate_queryset(combined, request)
         return paginator.get_paginated_response(page)
 
-
 # LIST + CREATE
-class LostPostListAPI(APIView):
-    permission_classes = [AllowAny]
+class ListCreateLostPostAPI(APIView):
+    # Anyone can list; POST requires auth via IsAuthenticatedOrReadOnly
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get(self, request):
-        posts = Lost_post.objects.all().order_by('-created_at')
+        posts = LostPost.objects.all().order_by('-created_at')
 
         paginator = PostPagination()
         result_page = paginator.paginate_queryset(posts, request)
@@ -128,12 +127,12 @@ class LostPostListAPI(APIView):
 
 
 # RETRIEVE + UPDATE + DELETE
-class LostPostDetailAPI(APIView):
+class RetrieveUpdateDeleteLostPostAPI(APIView):
     permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
-            return Lost_post.objects.get(pk=pk)
-        except Lost_post.DoesNotExist:
+            return LostPost.objects.get(pk=pk)
+        except LostPost.DoesNotExist:
             return None
 
     def get(self, request, pk):
@@ -161,10 +160,10 @@ class LostPostDetailAPI(APIView):
         return Response(status=204)
 
 
-class FoundPostListAPI(APIView):
-    permission_classes=[AllowAny]
+class ListCreateFoundPostAPI(APIView):
+    permission_classes=[IsAuthenticatedOrReadOnly]
     def get(self, request):
-        posts = Found_post.objects.all().order_by('-created_at')
+        posts = FoundPost.objects.all().order_by('-created_at')
 
         paginator = PostPagination()
         result_page = paginator.paginate_queryset(posts, request)
@@ -180,12 +179,12 @@ class FoundPostListAPI(APIView):
         return Response(serializer.errors, status=400)
 
 
-class FoundPostDetailAPI(APIView):
+class RetrieveUpdateDeleteFoundPostAPI(APIView):
     permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
-            return Found_post.objects.get(pk=pk)
-        except Found_post.DoesNotExist:
+            return FoundPost.objects.get(pk=pk)
+        except FoundPost.DoesNotExist:
             return None
 
     def get(self, request, pk):
@@ -213,10 +212,10 @@ class FoundPostDetailAPI(APIView):
         return Response(status=204)
 
 
-class SurrenderCustodyListAPI(APIView):
-    permission_classes = [AllowAny]
+class ListCreateCustodyAPI(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get(self, request):
-        posts = Surrender_custody_pets.objects.all().order_by('-created_at')
+        posts = SurrenderCustodyPet.objects.all().order_by('-created_at')
 
         paginator = PostPagination()
         result_page = paginator.paginate_queryset(posts, request)
@@ -232,12 +231,12 @@ class SurrenderCustodyListAPI(APIView):
         return Response(serializer.errors, status=400)
 
 
-class SurrenderCustodyDetailAPI(APIView):
+class RetrieveUpdateDeleteCustodyAPI(APIView):
     permission_classes = [AllowAny]
     def get_object(self, pk):
         try:
-            return Surrender_custody_pets.objects.get(pk=pk)
-        except Surrender_custody_pets.DoesNotExist:
+            return SurrenderCustodyPet.objects.get(pk=pk)
+        except SurrenderCustodyPet.DoesNotExist:
             return None
 
     def get(self, request, pk):
