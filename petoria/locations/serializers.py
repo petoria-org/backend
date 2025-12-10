@@ -4,8 +4,9 @@ from .models import Location
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    latitude = serializers.SerializerMethodField()
-    longitude = serializers.SerializerMethodField()
+    # Allow writing lat/lon while keeping computed values in responses
+    latitude = serializers.FloatField(required=False, write_only=True)
+    longitude = serializers.FloatField(required=False, write_only=True)
     readable = serializers.SerializerMethodField()
 
     class Meta:
@@ -20,11 +21,12 @@ class LocationSerializer(serializers.ModelSerializer):
             "readable",
         ]
 
-    def get_latitude(self, obj):
-        return obj.point.y if obj.point else None
-
-    def get_longitude(self, obj):
-        return obj.point.x if obj.point else None
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Expose lat/lon from point in responses
+        data["latitude"] = instance.point.y if instance.point else None
+        data["longitude"] = instance.point.x if instance.point else None
+        return data
 
     def get_readable(self, obj):
         if obj.point:

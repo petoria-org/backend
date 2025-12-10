@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from phonenumber_field.phonenumber import PhoneNumber
+from django.contrib.gis.geos import Point
 from locations.serializers import LocationSerializer
 from locations.models import Location
 from .models import Lost_post, Found_post, Surrender_custody_pets, PostImage
@@ -52,6 +53,11 @@ class BasePostSerializer(serializers.ModelSerializer):
         """
         if location_data is None:
             return instance.location if instance else None
+
+        lat = location_data.pop("latitude", None)
+        lon = location_data.pop("longitude", None)
+        if lat is not None and lon is not None:
+            location_data["point"] = Point(lon, lat)
 
         if instance and instance.location:
             # Update existing location
