@@ -128,7 +128,7 @@ class ListCreateLostPostAPI(APIView):
 
 # RETRIEVE + UPDATE + DELETE
 class RetrieveUpdateDeleteLostPostAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get_object(self, pk):
         try:
             return LostPost.objects.get(pk=pk)
@@ -180,7 +180,7 @@ class ListCreateFoundPostAPI(APIView):
 
 
 class RetrieveUpdateDeleteFoundPostAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get_object(self, pk):
         try:
             return FoundPost.objects.get(pk=pk)
@@ -232,7 +232,7 @@ class ListCreateCustodyAPI(APIView):
 
 
 class RetrieveUpdateDeleteCustodyAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     def get_object(self, pk):
         try:
             return SurrenderCustodyPet.objects.get(pk=pk)
