@@ -6,12 +6,19 @@ from rest_framework.views import APIView
 
 from .models import LostPost, FoundPost, SurrenderCustodyPet
 from .pagination import PostPagination
-from .serializers import LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer
+from .serializers import (
+    LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer,
+    LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer
+)
 
+
+# ================================
+#   USER ALL POSTS (lost + found + custody)
+# ================================
 class ListAllPostsUserAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+    def get(self, request):
         user = request.user
 
         lost = LostPost.objects.filter(user=user)
@@ -21,244 +28,249 @@ class ListAllPostsUserAPI(APIView):
         combined: List[Dict[str, Any]] = []
 
         for obj in lost:
-            data = LostPostSerializer(obj).data
+            data = LostPostListSerializer(obj).data
             data["type"] = "lost"
             combined.append(data)
 
         for obj in found:
-            data = FoundPostSerializer(obj).data
+            data = FoundPostListSerializer(obj).data
             data["type"] = "found"
             combined.append(data)
 
         for obj in surrender:
-            data = SurrenderCustodyPostSerializer(obj).data
+            data = SurrenderPostListSerializer(obj).data
             data["type"] = "surrender"
             combined.append(data)
 
-        combined = sorted(combined, key=lambda x: x["created_at"], reverse=True)
+        combined.sort(key=lambda x: x["created_at"], reverse=True)
 
         paginator = PostPagination()
         page = paginator.paginate_queryset(combined, request)
         return paginator.get_paginated_response(page)
-    
 
+
+# ================================
+#   USER POSTS (SEPARATE)
+# ================================
 class ListUserLostPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+    def get(self, request):
         posts = LostPost.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
-        serializer = LostPostSerializer(page, many=True)
+        serializer = LostPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
 class ListUserFoundPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+    def get(self, request):
         posts = FoundPost.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
-        serializer = FoundPostSerializer(page, many=True)
+        serializer = FoundPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
 class ListUserCustodyPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+    def get(self, request):
         posts = SurrenderCustodyPet.objects.filter(user=request.user).order_by("-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
-        serializer = SurrenderCustodyPostSerializer(page, many=True)
+        serializer = SurrenderPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
 
+# ================================
+#   ALL POSTS (lost + found + custody) PUBLIC
+# ================================
 class ListAllPostsAPI(APIView):
     permission_classes = [AllowAny]
-    def get(self, request, *args: Any, **kwargs: Any) -> Response:
+
+    def get(self, request):
         lost = LostPost.objects.all().order_by("-created_at")
         found = FoundPost.objects.all().order_by("-created_at")
         surrender = SurrenderCustodyPet.objects.all().order_by("-created_at")
 
-        combined: List[Dict[str, Any]] = []
+        combined = []
 
         for obj in lost:
-            data = LostPostSerializer(obj).data
+            data = LostPostListSerializer(obj).data
             data["type"] = "lost"
             combined.append(data)
 
         for obj in found:
-            data = FoundPostSerializer(obj).data
+            data = FoundPostListSerializer(obj).data
             data["type"] = "found"
             combined.append(data)
 
         for obj in surrender:
-            data = SurrenderCustodyPostSerializer(obj).data
+            data = SurrenderPostListSerializer(obj).data
             data["type"] = "surrender"
             combined.append(data)
 
-        combined = sorted(combined, key=lambda x: x["created_at"], reverse=True)
+        combined.sort(key=lambda x: x["created_at"], reverse=True)
 
         paginator = PostPagination()
         page = paginator.paginate_queryset(combined, request)
         return paginator.get_paginated_response(page)
 
-# LIST + CREATE
+
+# ================================
+#   LOST POSTS CRUD
+# ================================
 class ListCreateLostPostAPI(APIView):
-    # Anyone can list; POST requires auth via IsAuthenticatedOrReadOnly
     permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         posts = LostPost.objects.all().order_by('-created_at')
-
         paginator = PostPagination()
-        result_page = paginator.paginate_queryset(posts, request)
-
-        serializer = LostPostSerializer(result_page, many=True)
+        page = paginator.paginate_queryset(posts, request)
+        serializer = LostPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = LostPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
 
-# RETRIEVE + UPDATE + DELETE
 class RetrieveUpdateDeleteLostPostAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get_object(self, pk):
-        try:
-            return LostPost.objects.get(pk=pk)
-        except LostPost.DoesNotExist:
-            return None
+        return LostPost.objects.filter(pk=pk).first()
 
     def get(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = LostPostSerializer(post)
-        return Response(serializer.data)
+            return Response({"error": "Not Found"}, 404)
+        return Response(LostPostSerializer(post).data)
 
     def put(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = LostPostSerializer(post, data=request.data)
+            return Response({"error": "Not Found"}, 404)
+
+        serializer = LostPostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, 400)
 
     def delete(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
+            return Response({"error": "Not Found"}, 404)
         post.delete()
         return Response(status=204)
 
 
+# ================================
+#   FOUND POSTS CRUD
+# ================================
 class ListCreateFoundPostAPI(APIView):
-    permission_classes=[IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         posts = FoundPost.objects.all().order_by('-created_at')
-
         paginator = PostPagination()
-        result_page = paginator.paginate_queryset(posts, request)
-
-        serializer = FoundPostSerializer(result_page, many=True)
+        page = paginator.paginate_queryset(posts, request)
+        serializer = FoundPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = FoundPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+            serializer.save(user=request.user)
+            return Response(serializer.data, 201)
+        return Response(serializer.errors, 400)
 
 
 class RetrieveUpdateDeleteFoundPostAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get_object(self, pk):
-        try:
-            return FoundPost.objects.get(pk=pk)
-        except FoundPost.DoesNotExist:
-            return None
+        return FoundPost.objects.filter(pk=pk).first()
 
     def get(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = FoundPostSerializer(post)
-        return Response(serializer.data)
+            return Response({"error": "Not Found"}, 404)
+        return Response(FoundPostSerializer(post).data)
 
     def put(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = FoundPostSerializer(post, data=request.data)
+            return Response({"error": "Not Found"}, 404)
+
+        serializer = FoundPostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, 400)
 
     def delete(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
+            return Response({"error": "Not Found"}, 404)
         post.delete()
         return Response(status=204)
 
 
+# ================================
+#   CUSTODY POSTS CRUD
+# ================================
 class ListCreateCustodyAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         posts = SurrenderCustodyPet.objects.all().order_by('-created_at')
-
         paginator = PostPagination()
-        result_page = paginator.paginate_queryset(posts, request)
-
-        serializer = SurrenderCustodyPostSerializer(result_page, many=True)
+        page = paginator.paginate_queryset(posts, request)
+        serializer = SurrenderPostListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = SurrenderCustodyPostSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+            serializer.save(user=request.user)
+            return Response(serializer.data, 201)
+        return Response(serializer.errors, 400)
 
 
 class RetrieveUpdateDeleteCustodyAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get_object(self, pk):
-        try:
-            return SurrenderCustodyPet.objects.get(pk=pk)
-        except SurrenderCustodyPet.DoesNotExist:
-            return None
+        return SurrenderCustodyPet.objects.filter(pk=pk).first()
 
     def get(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = SurrenderCustodyPostSerializer(post)
-        return Response(serializer.data)
+            return Response({"error": "Not Found"}, 404)
+        return Response(SurrenderCustodyPostSerializer(post).data)
 
     def put(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
-        serializer = SurrenderCustodyPostSerializer(post, data=request.data)
+            return Response({"error": "Not Found"}, 404)
+
+        serializer = SurrenderCustodyPostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, 400)
 
     def delete(self, request, pk):
         post = self.get_object(pk)
         if not post:
-            return Response({"error": "Not Found"}, status=404)
+            return Response({"error": "Not Found"}, 404)
         post.delete()
         return Response(status=204)

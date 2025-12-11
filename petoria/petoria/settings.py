@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
     "imagekit",
     "daphne",
     "rest_framework_simplejwt",
+
 ]
 
 LOCAL_APPS = [
@@ -54,6 +55,7 @@ LOCAL_APPS = [
     "users",
     "locations",
     "petoria",
+    "success_story",
 ]
 
 INSTALLED_APPS = (

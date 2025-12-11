@@ -14,7 +14,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, EmailVerification
 from .serializers import LoginSerializer, SignupSerializer, VerifyOTPSerializer
 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
+from .serializers import UserSerializer  # فرض بر اینه که یه serializer برای User داری
+from .models import User
 # Create your views here.
 
 def generate_otp_code() -> str:
@@ -213,3 +218,14 @@ class ResetPasswordView(APIView):
         otp.save()
 
         return Response({"message": "Password has been reset successfully"}, status=status.HTTP_200_OK)
+
+
+
+class UserProfileView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)

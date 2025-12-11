@@ -35,4 +35,4 @@ urlpatterns = [
     path("User/found/", ListUserFoundPostsAPI.as_view()),
     path("User/surrender/", ListUserCustodyPostsAPI.as_view()),
     path("User/all/", ListAllPostsUserAPI.as_view()),
-    ]
+]
