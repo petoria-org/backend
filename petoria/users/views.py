@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .serializers import UserSerializer  # فرض بر اینه که یه serializer برای User داری
+from .serializers import UserSerializer
 from .models import User
 # Create your views here.
 
