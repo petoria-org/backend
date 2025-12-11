@@ -1,6 +1,6 @@
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView
-from posts.pagination import PostPagination  # اگر ندارید، می‌تونید از PageNumberPagination خود DRF استفاده کنید
-from posts.pagination import PostPagination  # یا از DRF default Pagination استفاده کن
+from posts.pagination import PostPagination
+from posts.pagination import PostPagination
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.permissions import AllowAny
