@@ -53,6 +53,7 @@ class SignupView(APIView):
                     message=f"OTP code is: {code}",
                     from_email="noreply@yourdomain.com",
                     recipient_list=[user.email],
+                    fail_silently=False,
                 )
             except Exception:
                 return Response(

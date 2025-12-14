@@ -6,6 +6,7 @@ migrations
 # Environment
 *venv*
 *.env
+media
 
 # Database
 *.sqlite3
