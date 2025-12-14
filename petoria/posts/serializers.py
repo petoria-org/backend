@@ -1,7 +1,4 @@
 from rest_framework import serializers
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.validators import validate_email
-from phonenumber_field.phonenumber import PhoneNumber
 from django.contrib.gis.geos import Point
 from locations.serializers import LocationSerializer
 from locations.models import Location
