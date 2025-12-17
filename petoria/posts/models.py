@@ -142,19 +142,6 @@ class BasePost(models.Model):
         help_text=_("Show email ")
     )
 
-    # contact_phone = PhoneNumberField(
-    # blank=True,
-    # null=True,
-    # help_text=_("Optional phone.")
-    # )
-
-    # contact_email = models.EmailField(
-    # max_length=100,
-    # blank=True,
-    # null=True,
-    # help_text=_("Optional email")
-    # )
-
     # === STATUS & METADATA ===
     status = models.CharField(
         max_length=20,

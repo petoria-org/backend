@@ -6,7 +6,7 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture: serializers.SerializerMethodField = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -15,7 +15,6 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'profile_picture',
-            'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 

@@ -123,7 +123,7 @@ class LostPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LostPost
-        fields = ["id", "title", "pet_type", "lost_time", "thumbnail"]
+        fields = ["id", "title", "pet_type", "lost_time", "thumbnail", "created_at"]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
@@ -136,7 +136,7 @@ class FoundPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FoundPost
-        fields = ["id", "title", "pet_type", "found_time", "thumbnail"]
+        fields = ["id", "title", "pet_type", "found_time", "thumbnail", "created_at"]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
@@ -149,7 +149,7 @@ class SurrenderPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurrenderCustodyPet
-        fields = ["id", "title", "pet_type", "thumbnail"]
+        fields = ["id", "title", "pet_type", "thumbnail", "created_at"]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
