@@ -31,17 +31,34 @@ class BasePostSerializer(serializers.ModelSerializer):
     def validate(self, data):
         location_data = data.get("location")
         model_name = self.Meta.model.__name__
-
-        # Lost_post must have a location
-        if model_name == "LostPost" and not location_data:
+        
+        # Get the instance if this is an update
+        instance = getattr(self, 'instance', None)
+        
+        # Lost_post must have a location on CREATE only
+        if model_name == "LostPost" and not location_data and not instance:
             raise serializers.ValidationError(
                 "Location is required for lost-pet posts."
             )
-        # If location is provided, at least city or country should exist
-        if location_data:
-            if not (location_data.get("city") or location_data.get("country")):
+        
+        # If this is an update for LostPost, prevent location deletion
+        if model_name == "LostPost" and instance and location_data is None:
+            # location_data is None when key is missing from request
+            # This is fine - don't update location
+            pass
+        elif model_name == "LostPost" and instance and location_data is not None:
+            # location_data exists in request
+            if location_data == {}:
+                # Empty dict - probably trying to clear location
                 raise serializers.ValidationError(
-                    "City or country must be provided when location is given."
+                    {"location": "Location cannot be removed from lost-pet posts."}
+                )
+        
+        # If location is provided (not None or empty dict), validate its content
+        if location_data:
+            if not (location_data.get("city") and location_data.get("country")):
+                raise serializers.ValidationError(
+                    {"location": "City or country must be provided when location is given."}
                 )
         return data
 
