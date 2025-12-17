@@ -4,21 +4,88 @@ from typing import Optional
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.utils import timezone
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, EmailVerification
+from .models import EmailVerification
+from .models import User
 from .serializers import LoginSerializer, SignupSerializer, VerifyOTPSerializer
+from .serializers import UserSerializer
 
 
-# Create your views here.
+
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        google_token = request.data.get("token")
+
+        if not google_token:
+            return Response({"error": "Token is required"}, status=400)
+
+        try:
+            # Validate token with Google
+            GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"
+            info = id_token.verify_oauth2_token(
+                google_token,
+                google_requests.Request(),
+                GOOGLE_CLIENT_ID
+            )
+        except Exception:
+            return Response({"error": "Invalid Google token"}, status=400)
+
+        google_id = info.get("sub")
+        email = info.get("email")
+        first_name = info.get("given_name", "")
+        last_name = info.get("family_name", "")
+
+        if not email:
+            return Response({"error": "Google did not return email"}, status=400)
+
+        # ----- SIGNUP + LOGIN -----
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": email.split("@")[0],
+                "first_name": first_name,
+                "last_name": last_name,
+                "google_id": google_id,
+                "is_active": True,
+            }
+        )
+
+        # If old user but google_id not yet saved
+        if not user.google_id:
+            user.google_id = google_id
+            user.save()
+
+        # JWT
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "status": "signup" if created else "login",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            },
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }, status=200)
+
 
 def generate_otp_code() -> str:
     code = random.randint(1, 999999)
     return f"{code:06d}"
+
 
 def invalidate_previous_otps(user: User):
     """
@@ -66,6 +133,7 @@ class SignupView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RequestOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -105,7 +173,6 @@ class RequestOTPView(APIView):
             )
 
         return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
-
 
 
 class VerifyOTPView(APIView):
@@ -162,7 +229,8 @@ class LoginView(APIView):
         if not user_auth:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         if not user_auth.is_active:
-            return Response({"error": "Account is not active. Please verify your email."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Account is not active. Please verify your email."},
+                            status=status.HTTP_403_FORBIDDEN)
 
         refresh = RefreshToken.for_user(user_auth)
         return Response(
@@ -176,10 +244,9 @@ class LoginView(APIView):
         )
 
 
-
-
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request) -> Response:
         """
         Reset password after verifying OTP
@@ -189,7 +256,8 @@ class ResetPasswordView(APIView):
         new_password: str = request.data.get('new_password')
 
         if not email or not code or not new_password:
-            return Response({"error": "Email, OTP code, and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Email, OTP code, and new password are required"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user: Optional[User] = User.objects.filter(email=email, is_active=True).first()
         if not user:
@@ -213,3 +281,12 @@ class ResetPasswordView(APIView):
         otp.save()
 
         return Response({"message": "Password has been reset successfully"}, status=status.HTTP_200_OK)
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)

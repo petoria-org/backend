@@ -1,7 +1,8 @@
-from rest_framework import serializers
 from django.contrib.gis.geos import Point
-from locations.serializers import LocationSerializer
 from locations.models import Location
+from locations.serializers import LocationSerializer
+from rest_framework import serializers
+
 from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 
 
@@ -112,7 +113,6 @@ class SurrenderCustodyPostSerializer(BasePostSerializer):
             "vaccination",
             "steriliz",
         ]
-
 
 
 # ------------------------------

@@ -41,7 +41,6 @@ class PostImage(models.Model):
 class BasePost(models.Model):
     """
 
-    Editor: Mahshid Nourollah
     Description: Abstract base model for all post types (lost, found, surrender/adoption).
 
     includes:
@@ -279,80 +278,3 @@ class SurrenderCustodyPet(BasePost):
     vaccination: models.BooleanField = models.BooleanField(default=False)
 
     steriliz: models.BooleanField = models.BooleanField(default=False)
-
-    # breed_size = models.CharField(
-    # max_length=10,
-    # choices=PetSIZES.choices,
-    # default=PetSIZES.OTHER,
-    # blank=True,
-    # null=True,
-    # help_text=_("Select the typical size of the breed(optional).")
-
-    # )
-
-    # health_status = models.CharField(
-    # max_length=10,
-    # choices=HealthStatus.choices,
-    # default=HealthStatus.UNKNOWN,
-    # blank=False,
-    # null=False,
-    # help_text=_("Select the current health condition of the pet.")
-    # )
-
-    # country_of_origin = models.CharField(
-    # max_length=100,
-    # blank=True,
-    # null=True,
-    # help_text=_("Enter the country where this breed is originally from (optional).")
-    # )
-
-    # suitable_for = models.CharField(
-    # max_length=100,
-    # choices=SUITABILITY.choices,
-    # default=SUITABILITY.OTHER,
-    # blank=True,
-    # null=True,
-    # help_text=_("Select what type of home this pet.")
-    # )
-
-    # average_lifespan = models.PositiveIntegerField(
-    # blank=True,
-    # null=True,
-    # help_text=_("Enter the average lifespan of this breed in years (optional).")
-    # )
-
-# class Lost_post(BasePost):
-# pass
-
-# breed = models.CharField(
-#     max_length=100,
-#     blank=True,
-#     help_text=_("Breed of the pet (leave blank if unknown)")
-# )
-
-# color = models.CharField(
-#     max_length=100,
-#     help_text=_("Color and distinctive markings")
-# )
-
-# # EXACT AGE - for owners who know precise age
-# age = models.CharField(
-#     max_length=50,
-#     blank=True,
-#     help_text=_("Exact age (e.g., '2 years 3 months', '8 months', '5 years')")
-# )
-
-
-# # EXACT AGE - for owners who know precise age
-# age = models.CharField(
-#     max_length=50,
-#     blank=True,
-#     help_text=_("Exact age (e.g., '2 years 3 months', '8 months', '5 years')")
-# )
-
-
-# images = models.JSONField(
-#   default=list,
-#    blank=True,
-#   help_text=_("List of image URLs for the post")
-# )
