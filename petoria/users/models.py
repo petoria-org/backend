@@ -13,9 +13,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 class User(AbstractUser):
     """"
      Core Authentication Fields (from AbstractUser)
-    - username - (150 chars, unique)
-    - first_name - (150 chars)
-    - last_name - (150 chars)
     - password - (hashed)
     - is_active - (boolean)
     - is_staff - (boolean)
@@ -26,9 +23,18 @@ class User(AbstractUser):
     Login with username or email.
     Email verification required to activate account.
     """
-
+    first_name = models.CharField(
+        max_length=30,
+    )
+    last_name = models.CharField(
+        max_length=30,
+    )
+    username = models.CharField(
+        max_length=50,
+        unique=True      
+    )
     # === Contact/Notification Email ===
-    email: models.EmailField = models.EmailField(
+    email = models.EmailField(
         unique=True,
         error_messages={
             'unique': "This email is already registered. Please use a different email.",
@@ -36,7 +42,7 @@ class User(AbstractUser):
         help_text="Contact email for pet notifications and alerts"
     )
 
-    phone: PhoneNumberField = PhoneNumberField(
+    phone = PhoneNumberField(
         blank=True,
         null=True,
         help_text="Contact phone for urgent pet communications"
@@ -44,7 +50,7 @@ class User(AbstractUser):
 
     # === Profile Information ===
 
-    profile_picture: ProcessedImageField = ProcessedImageField(
+    profile_picture = ProcessedImageField(
         upload_to='profile_pics/',
         format='JPEG',
         processors=[ResizeToFill(300, 300)],
@@ -55,14 +61,14 @@ class User(AbstractUser):
         help_text="User profile photo"
     )
 
-    bio: models.TextField = models.TextField(
+    bio = models.TextField(
         max_length=500,
         blank=True,
         help_text="Brief introduction about yourself and your experience with pets"
     )
 
     # === Google Authentication ===
-    google_id: models.CharField = models.CharField(
+    google_id = models.CharField(
         max_length=100,
         blank=True,
         null=True,
@@ -71,13 +77,13 @@ class User(AbstractUser):
     )
 
     # === Notification Preferences ===
-    email_notifications: models.BooleanField = models.BooleanField(
+    email_notifications = models.BooleanField(
         default=True,
         help_text="Receive email notifications "
     )
 
     # === Location ===
-    location: models.OneToOneField = models.OneToOneField(
+    location = models.OneToOneField(
         Location,
         on_delete=models.SET_NULL,
         null=True,
@@ -85,7 +91,7 @@ class User(AbstractUser):
         related_name='user'
     )
 
-    is_email_verified: models.BooleanField = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.username}"
@@ -123,7 +129,7 @@ def generate_6_digit_code():
 
 
 class EmailVerification(models.Model):
-    user: models.ForeignKey = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="email_verification_codes"
