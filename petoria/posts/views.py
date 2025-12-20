@@ -4,12 +4,59 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticate
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import LostPost, FoundPost, SurrenderCustodyPet
+from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 from .pagination import PostPagination
 from .serializers import (
     LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer,
-    LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer
+    LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer,
+    PostImageSerializer
 )
+
+
+# ================================
+#   POST IMAGES UPLOAD
+# ================================
+class UploadPostImageAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        uploaded = request.FILES.get("image")
+        if not uploaded:
+            return Response({"error": "No image provided."}, status=400)
+
+        content_type = (uploaded.content_type or "").lower()
+        size = uploaded.size
+        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+        max_size = 10 * 1024 * 1024  # 10 MB
+
+        if content_type not in allowed_types:
+            return Response({"error": "Unsupported file type."}, status=400)
+        if size > max_size:
+            return Response({"error": "File too large.", "max_bytes": max_size}, status=400)
+
+        post_image = PostImage.objects.create(
+            uploaded_by=request.user,
+            image=uploaded,
+        )
+        serializer = PostImageSerializer(post_image)
+        return Response(serializer.data, status=201)
+
+
+class DeletePostImageAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, image_id):
+        img = PostImage.objects.filter(id=image_id, uploaded_by=request.user).first()
+        if not img:
+            return Response({"error": "Not found or not owned"}, status=404)
+
+        # If already bound to a post, ensure the requester owns that post
+        if img.post and img.post.user != request.user:
+            return Response({"error": "Not permitted to delete this image"}, status=403)
+
+        img.image.delete(save=False)
+        img.delete()
+        return Response(status=204)
 
 
 # ================================
@@ -158,7 +205,7 @@ class RetrieveUpdateDeleteLostPostAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
 
-        serializer = LostPostSerializer(post, data=request.data, partial=True)
+        serializer = LostPostSerializer(post, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -210,7 +257,7 @@ class RetrieveUpdateDeleteFoundPostAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
 
-        serializer = FoundPostSerializer(post, data=request.data, partial=True)
+        serializer = FoundPostSerializer(post, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -262,7 +309,7 @@ class RetrieveUpdateDeleteCustodyAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
 
-        serializer = SurrenderCustodyPostSerializer(post, data=request.data, partial=True)
+        serializer = SurrenderCustodyPostSerializer(post, data=request.data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

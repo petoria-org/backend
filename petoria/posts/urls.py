@@ -13,9 +13,13 @@ from .views import (
     ListUserFoundPostsAPI,
     ListUserCustodyPostsAPI,
     ListAllPostsUserAPI,
+    UploadPostImageAPI,
+    DeletePostImageAPI,
 )
 
 urlpatterns = [
+    path("images/upload/", UploadPostImageAPI.as_view(), name="post-image-upload"),
+    path("images/<int:image_id>/", DeletePostImageAPI.as_view(), name="post-image-delete"),
 
     path("lost-posts/", ListCreateLostPostAPI.as_view(), name="lostpost-list-create"),
     path("lost-posts/<int:pk>/", RetrieveUpdateDeleteLostPostAPI.as_view(), name="lostpost-detail"),

@@ -17,25 +17,23 @@ class PostImage(models.Model):
     Description: The storage model of advertisement images. Using the Generic Relations of each image
         It is connected to the relevant ad and the number of images per ad is limited to 7.
     """
-    content_type: models.ForeignKey = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="post_images",
     )
-    object_id: models.PositiveIntegerField = models.PositiveIntegerField()
-    post: GenericForeignKey = GenericForeignKey("content_type", "object_id")
-    image: models.ImageField = models.ImageField(upload_to="pets/")
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    post = GenericForeignKey("content_type", "object_id")
+    image = models.ImageField(upload_to="posts/")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def clean(self):
-        model_class = self.content_type.model_class()
-        count = (
-            model_class.objects.get(id=self.object_id).images.count()
-            if self.object_id
-            else 0
-        )
-        if count >= 7:
-            raise ValidationError("Each post cannot have more than 7 photos.")
-
-    thumbnail: ImageSpecField = ImageSpecField(source="image", processors=[ResizeToFill(300, 300)])
+    thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(300, 300)])
 
 
 class BasePost(models.Model):
@@ -109,20 +107,20 @@ class BasePost(models.Model):
         help_text=_("Age of the pet.")
     )
 
-    breed: models.CharField = models.CharField(
+    breed = models.CharField(
         max_length=100,
         blank=True,
         help_text=_("Breed (optional).")
     )
 
-    Specific_symptoms: models.CharField = models.CharField(
+    Specific_symptoms = models.CharField(
         max_length=100,
         blank=True,
         help_text=_("Color or markings (optional).")
     )
 
     # === Location INFO ===
-    location: models.OneToOneField = models.OneToOneField(
+    location = models.OneToOneField(
         Location,
         on_delete=models.SET_NULL,
         blank=True,
