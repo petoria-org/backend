@@ -181,8 +181,9 @@ class VerifyOTPView(APIView):
     def post(self, request) -> Response:
         serializer: VerifyOTPSerializer = VerifyOTPSerializer(data=request.data)
         if serializer.is_valid():
-            email: str = serializer.validated_data['email']
-            code: str = serializer.validated_data['code']
+            purpose: str = serializer.validated_data.get('purpose')
+            email: str = serializer.validated_data.get('email')
+            code: str = serializer.validated_data.get('code')
 
             # Check OTP
             try:
@@ -198,13 +199,16 @@ class VerifyOTPView(APIView):
             if otp.expires_at < timezone.now():
                 return Response({"error": "OTP expired."}, status=status.HTTP_400_BAD_REQUEST)
 
-            # otp is valid -> activate the account
-            otp.user.is_active = True
-            otp.user.save()
-            otp.is_used = True
-            otp.save()
+            if purpose == "email":
+                # otp is valid -> activate the account
+                otp.user.is_active = True
+                otp.user.save()
+                otp.is_used = True
+                otp.save()
+                return Response({"message": "OTP verified. User is now active."}, status=status.HTTP_200_OK)
 
-            return Response({"message": "OTP verified. User is now active."}, status=status.HTTP_200_OK)
+            elif purpose == "reset":
+                return Response({"message": "OTP verified."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
