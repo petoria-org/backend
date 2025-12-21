@@ -2,6 +2,7 @@ from django.contrib.gis.geos import Point
 from locations.models import Location
 from locations.serializers import LocationSerializer
 from rest_framework import serializers
+from django.contrib.contenttypes.models import ContentType
 
 from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 
@@ -15,6 +16,13 @@ class PostImageSerializer(serializers.ModelSerializer):
 class BasePostSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True)
     location = LocationSerializer(required=False)
+    image_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+        allow_empty=True,
+        help_text="IDs returned from /posts/images/upload/"
+    )
 
     class Meta:
         model = None  # To be set in child serializers
@@ -24,6 +32,7 @@ class BasePostSerializer(serializers.ModelSerializer):
             "location",
             "contact_phone", "contact_email",
             "status",
+            "image_ids",
             "created_at", "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "images"]
@@ -62,6 +71,29 @@ class BasePostSerializer(serializers.ModelSerializer):
                 )
         return data
 
+    def _bind_images(self, instance, image_ids, user):
+        if not image_ids:
+            return
+
+        # Ensure IDs are unique
+        unique_ids = list(set(image_ids))
+        images = PostImage.objects.filter(
+            id__in=unique_ids,
+            uploaded_by=user,
+            content_type__isnull=True,
+            object_id__isnull=True
+        )
+
+        if images.count() != len(unique_ids):
+            raise serializers.ValidationError({"image_ids": "One or more image IDs are invalid or already bound."})
+
+        existing_count = instance.images.count()
+        if existing_count + images.count() > 7:
+            raise serializers.ValidationError({"images": "Each post cannot have more than 7 photos."})
+
+        ct = ContentType.objects.get_for_model(instance.__class__)
+        PostImage.objects.filter(id__in=unique_ids).update(content_type=ct, object_id=instance.id)
+
     def _handle_location(self, instance, location_data):
         """
         Create or update the related Location from nested data.
@@ -86,6 +118,7 @@ class BasePostSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         location_data = validated_data.pop("location", None)
+        image_ids = validated_data.pop("image_ids", [])
 
         # Attach request user if available; otherwise expect client to provide
         request = self.context.get("request") if hasattr(self, "context") else None
@@ -93,16 +126,27 @@ class BasePostSerializer(serializers.ModelSerializer):
             validated_data.setdefault("user", request.user)
 
         location = self._handle_location(instance=None, location_data=location_data)
-        return self.Meta.model.objects.create(location=location, **validated_data)
+        post = self.Meta.model.objects.create(location=location, **validated_data)
+        user = validated_data.get("user") or (request.user if request else None)
+        if user:
+            self._bind_images(post, image_ids, user)
+        return post
 
     def update(self, instance, validated_data):
         location_data = validated_data.pop("location", None)
+        image_ids = validated_data.pop("image_ids", [])
         if location_data is not None:
             instance.location = self._handle_location(instance, location_data)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        request = self.context.get("request") if hasattr(self, "context") else None
+        user = validated_data.get("user") or (request.user if request else None)
+        if user and image_ids:
+            self._bind_images(instance, image_ids, user)
+
         return instance
 
 
