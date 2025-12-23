@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 
-from django.db.models import Q
+from django.db.models import Q, F
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -10,79 +10,130 @@ from .models import Lost_post, Found_post, Surrender_custody_pets
 from .models import PostImage
 from .pagination import PostPagination
 from .serializers import (
-    LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer
+    LostPostListSerializer,
+    FoundPostListSerializer,
+    SurrenderPostListSerializer
 )
 from .serializers import (
     LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer,
     PostImageSerializer
 )
+from .utils import apply_sorting
 
 
 class SearchPostsAPI(APIView):
     """
-    Search all posts based on a text query 'q'.
-    Searches across:
-        - title, description
-        - pet_name, breed, Specific_symptoms
-        - diseases (only for Surrender)
-        - location city/country
+    Search + Sort API for all posts (Lost, Found, Surrender)
     """
     permission_classes = [AllowAny]
 
     def get(self, request):
-        query = request.query_params.get("q", "").strip()
-        if not query:
-            return Response({"error": "Query parameter 'q' is required."}, status=400)
+        # --------------------
+        # Query params
+        # --------------------
+        q = request.query_params.get("q", "").strip()
+        sort = request.query_params.get("sort", "newest")
 
-        # ---------- Lost posts ----------
-        lost_qs = Lost_post.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(pet_name__icontains=query) |
-            Q(breed__icontains=query) |
-            Q(Specific_symptoms__icontains=query) |
-            Q(location__city__icontains=query) |
-            Q(location__country__icontains=query)
-        ).order_by("-created_at")
-        lost_serialized = LostPostListSerializer(lost_qs, many=True).data
-        for item in lost_serialized:
-            item["type"] = "lost"
+        pet_type = request.query_params.get("pet_type")
+        pet_sex = request.query_params.get("pet_sex")
+        city = request.query_params.get("city")
 
-        # ---------- Found posts ----------
-        found_qs = Found_post.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(pet_name__icontains=query) |
-            Q(breed__icontains=query) |
-            Q(Specific_symptoms__icontains=query) |
-            Q(location__city__icontains=query) |
-            Q(location__country__icontains=query)
-        ).order_by("-created_at")
-        found_serialized = FoundPostListSerializer(found_qs, many=True).data
-        for item in found_serialized:
-            item["type"] = "found"
+        # --------------------
+        # Search Q
+        # --------------------
+        search_q = Q()
+        if q:
+            search_q = (
+                    Q(title__icontains=q) |
+                    Q(description__icontains=q) |
+                    Q(pet_name__icontains=q) |
+                    Q(breed__icontains=q) |
+                    Q(Specific_symptoms__icontains=q) |
+                    Q(location__city__icontains=q)
+                    # Q(location__country__icontains=q)
+            )
 
-        # ---------- Surrender / Adoption posts ----------
-        surrender_qs = Surrender_custody_pets.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(pet_name__icontains=query) |
-            Q(breed__icontains=query) |
-            Q(Specific_symptoms__icontains=query) |
-            Q(diseases__icontains=query) |
-            Q(location__city__icontains=query) |
-            Q(location__country__icontains=query)
-        ).order_by("-created_at")
-        surrender_serialized = SurrenderPostListSerializer(surrender_qs, many=True).data
-        for item in surrender_serialized:
-            item["type"] = "surrender"
+        # --------------------
+        # Filters Q
+        # --------------------
+        filter_q = Q()
+        if pet_type:
+            filter_q &= Q(pet_type=pet_type)
+        if pet_sex:
+            filter_q &= Q(pet_sex=pet_sex)
+        if city:
+            filter_q &= Q(location__city__iexact=city)
 
-        # ---------- Combine all ----------
-        combined = lost_serialized + found_serialized + surrender_serialized
-        combined.sort(key=lambda x: x["created_at"], reverse=True)
+        # --------------------
+        # Lost posts
+        # --------------------
+        lost_qs = (
+            Lost_post.objects
+            .filter(search_q & filter_q)
+            .annotate(event_time=F("lost_time"))
+        )
 
+        # --------------------
+        # Found posts
+        # --------------------
+        found_qs = (
+            Found_post.objects
+            .filter(search_q & filter_q)
+            .annotate(event_time=F("found_time"))
+        )
+
+        # --------------------
+        # Surrender posts
+        # --------------------
+        surrender_qs = (
+            Surrender_custody_pets.objects
+            .filter(
+                (search_q | Q(diseases__icontains=q)) & filter_q
+            )
+        )
+
+        # --------------------
+        # Apply sorting
+        # --------------------
+        lost_qs = apply_sorting(lost_qs, sort)
+        found_qs = apply_sorting(found_qs, sort)
+        surrender_qs = apply_sorting(surrender_qs, sort)
+
+        # --------------------
+        # Serialize & combine
+        # --------------------
+        results = []
+
+        for obj in lost_qs:
+            data = LostPostListSerializer(obj).data
+            data["type"] = "lost"
+            results.append(data)
+
+        for obj in found_qs:
+            data = FoundPostListSerializer(obj).data
+            data["type"] = "found"
+            results.append(data)
+
+        for obj in surrender_qs:
+            data = SurrenderPostListSerializer(obj).data
+            data["type"] = "surrender"
+            results.append(data)
+
+        # --------------------
+        # Final mixed ordering (safety)
+        # --------------------
+        if sort == "oldest":
+            results.sort(key=lambda x: x["created_at"])
+        elif sort == "last_updated":
+            results.sort(key=lambda x: x["updated_at"], reverse=True)
+        else:
+            results.sort(key=lambda x: x["created_at"], reverse=True)
+
+        # --------------------
+        # Pagination
+        # --------------------
         paginator = PostPagination()
-        page = paginator.paginate_queryset(combined, request)
+        page = paginator.paginate_queryset(results, request)
         return paginator.get_paginated_response(page)
 
 
