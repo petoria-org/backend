@@ -112,20 +112,20 @@ class SignupSerializer(serializers.Serializer):
         user.save()
         return user
 
-
 class VerifyOTPSerializer(serializers.Serializer):
-    purpose = serializers.CharField(max_length=5)
-    email = serializers.EmailField()
-    code = serializers.CharField(max_length=6)
+    purpose = serializers.ChoiceField(
+        choices=["email", "reset"],
+        required=True
+    )
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(min_length=6, max_length=6, required=True)
 
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
-        purpose = attrs.get('purpose')
-        if purpose not in ['reset', 'email']:
-            raise serializers.ValidationError("Purpose should be either reset or email")
-        user = User.objects.filter(email=attrs.get('email')).first()
+        user = User.objects.filter(email=attrs['email']).first()
         if not user:
-            raise serializers.ValidationError("User not found.")
+            raise serializers.ValidationError({"email": "User not found."})
         return attrs
+
 
 
 class LoginSerializer(serializers.Serializer):
