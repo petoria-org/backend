@@ -181,38 +181,82 @@ class SurrenderCustodyPostSerializer(BasePostSerializer):
 # ------------------------------
 class LostPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
+    location = LocationSerializer(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = LostPost
-        fields = ["id", "title", "pet_type", "lost_time", "thumbnail", "created_at"]
+        fields =[
+            "id",
+            "post_type",
+            "title",
+            "description",
+            "pet_type",
+            "location",
+            "lost_time",
+            "thumbnail",
+            "created_at"
+        ]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
             return obj.images.first().thumbnail.url
         return None
+    
+    def get_post_type(self, obj):
+        return "lost"
 
 
 class FoundPostListSerializer(serializers.ModelSerializer):
-    thumbnail: str = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField(read_only=True)
+    location = LocationSerializer(read_only=True)
+    pet_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = FoundPost
-        fields = ["id", "title", "pet_type", "found_time", "thumbnail", "created_at"]
+        fields =[
+            "id",
+            "post_type",
+            "title",
+            "description",
+            "pet_type",
+            "location",
+            "found_time",
+            "thumbnail",
+            "created_at"
+        ]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
             return obj.images.first().thumbnail.url
         return None
+    
+    def get_pet_type(self, obj):
+        return "found"
 
 
 class SurrenderPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
+    location = LocationSerializer(read_only=True)
+    pet_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = SurrenderCustodyPet
-        fields = ["id", "title", "pet_type", "thumbnail", "created_at"]
+        fields =[
+            "id",
+            "pet_type",
+            "title",
+            "description",
+            "pet_type",
+            "location",
+            "thumbnail",
+            "created_at"
+        ]
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
             return obj.images.first().thumbnail.url
         return None
+    
+    def get_pet_type(self, obj):
+        return "adoption"
