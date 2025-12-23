@@ -15,7 +15,8 @@ from .views import (
     ListAllPostsUserAPI,
     UploadPostImageAPI,
     DeletePostImageAPI,
-    FilterPostsAPI
+    FilterPostsAPI,
+    SearchPostsAPI
 )
 
 urlpatterns = [
@@ -42,5 +43,6 @@ urlpatterns = [
     path("user/all/", ListAllPostsUserAPI.as_view()),
 
     path("filter/", FilterPostsAPI.as_view(), name="filter-posts"),
+    path("search/", SearchPostsAPI.as_view(), name="search-posts"),
 
 ]
