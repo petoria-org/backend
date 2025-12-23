@@ -1,12 +1,10 @@
 from typing import Optional, Dict, Any
-
 from rest_framework import serializers
-
 from .models import User
-
+import re
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture: serializers.SerializerMethodField = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -14,9 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'email',
-            'phone_number',
             'profile_picture',
-            'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -31,46 +27,113 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.Serializer):
-    username: serializers.CharField = serializers.CharField(max_length=50)
-    email: serializers.EmailField = serializers.EmailField()
-    password: serializers.CharField = serializers.CharField(write_only=True, min_length=6)
 
-    def validate(self, attrs: dict[str, Any]) -> Dict[str, Any]:
-        if User.objects.filter(email=attrs['email']).exists():
-            raise serializers.ValidationError("Email already exists.")
-        if User.objects.filter(username=attrs['username']).exists():
+    first_name = serializers.CharField(
+        required=True,
+        min_length=2,
+        max_length=30,
+    )
+
+    last_name = serializers.CharField(
+        required=True,
+        min_length=2,
+        max_length=30,
+    )
+    
+    username = serializers.CharField(
+        required=True,
+        min_length = 2,
+        max_length=50,
+    )
+    
+    email = serializers.EmailField(
+        required=True,
+    )
+
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        min_length=8,
+    )
+    confirm_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        min_length=8
+    )
+
+    def validate_username(self, value):
+        if not re.match(r'^[a-zA-Z0-9_.]+$', value):
+            raise serializers.ValidationError(
+                "Username can only contain letters, numbers, underscores and periods."
+            )
+        if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username already exists.")
-        return attrs
+        return value
+    
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Email already exists.")
+        return value
+    
+    def validate_password(self, value):
+        rules = [
+            (len(value) >= 8, "at least 8 characters"),
+            (re.search(r'[A-Z]', value), "uppercase letters"),
+            (re.search(r'[a-z]', value), "lowercase letters"),
+            (re.search(r'\d', value), "numbers"),
+            (re.search(r'[!@#$%^&*(),.?":{}|<>]', value), "special characters"),
+        ]
+        
+        failed_rules = [message for condition, message in rules if not condition]
+        
+        if failed_rules:
+            error_message = f"Password must contain {', '.join(failed_rules)}."
+            raise serializers.ValidationError(error_message)
+        
+        return value
+    
+    def validate_confirm_password(self, value):
+        password = self.initial_data.get('password')
+        if password != value:
+            error_message = 'Confirm password is not the same as password.'
+            raise serializers.ValidationError(error_message)
+        return value
+    
 
     def create(self, validated_data: Dict[str, Any]) -> User:
         user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password']
+            first_name = validated_data.get('first_name'),
+            last_name = validated_data.get('last_name'),
+            username=validated_data.get('username'),
+            email=validated_data.get('email'),
+            password=validated_data.get('password')
         )
         user.is_active = False
         user.save()
         return user
 
-
 class VerifyOTPSerializer(serializers.Serializer):
-    email: serializers.EmailField = serializers.EmailField()
-    code: serializers.CharField = serializers.CharField(max_length=6)
+    purpose = serializers.ChoiceField(
+        choices=["email", "reset"],
+        required=True
+    )
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(min_length=6, max_length=6, required=True)
 
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         user = User.objects.filter(email=attrs['email']).first()
         if not user:
-            raise serializers.ValidationError("User not found.")
+            raise serializers.ValidationError({"email": "User not found."})
         return attrs
 
 
+
 class LoginSerializer(serializers.Serializer):
-    identifier: serializers.CharField = serializers.CharField()
-    password: serializers.CharField = serializers.CharField(required=False, write_only=True)
+    identifier = serializers.CharField()
+    password = serializers.CharField(required=False, write_only=True)
 
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         identifier: str = attrs.get('identifier')
-        password: Optional[str] = attrs.get('password')
 
         # login with email or username
         user: Optional[User] = (

@@ -29,7 +29,7 @@ def print_tree(node, indent=0):
         # Class variables
         for item in node.body:
             if isinstance(item, ast.AnnAssign):
-                var_name = item.target.id
+                var_name = item.target.id  # pylance catches some error but the code works
                 var_type = get_type(item.annotation)
                 print(f"{prefix}  Class Var: {var_name}: {var_type}")
 

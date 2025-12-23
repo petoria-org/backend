@@ -17,31 +17,28 @@ class PostImage(models.Model):
     Description: The storage model of advertisement images. Using the Generic Relations of each image
         It is connected to the relevant ad and the number of images per ad is limited to 7.
     """
-    content_type: models.ForeignKey = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="post_images",
     )
-    object_id: models.PositiveIntegerField = models.PositiveIntegerField()
-    post: GenericForeignKey = GenericForeignKey("content_type", "object_id")
-    image: models.ImageField = models.ImageField(upload_to="pets/")
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    post = GenericForeignKey("content_type", "object_id")
+    image = models.ImageField(upload_to="posts/")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def clean(self):
-        model_class = self.content_type.model_class()
-        count = (
-            model_class.objects.get(id=self.object_id).images.count()
-            if self.object_id
-            else 0
-        )
-        if count >= 7:
-            raise ValidationError("Each post cannot have more than 7 photos.")
-
-    thumbnail: ImageSpecField = ImageSpecField(source="image", processors=[ResizeToFill(300, 300)])
+    thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(300, 300)])
 
 
 class BasePost(models.Model):
     """
 
-    Editor: Mahshid Nourollah
     Description: Abstract base model for all post types (lost, found, surrender/adoption).
 
     includes:
@@ -110,20 +107,20 @@ class BasePost(models.Model):
         help_text=_("Age of the pet.")
     )
 
-    breed: models.CharField = models.CharField(
+    breed = models.CharField(
         max_length=100,
         blank=True,
         help_text=_("Breed (optional).")
     )
 
-    Specific_symptoms: models.CharField = models.CharField(
+    Specific_symptoms = models.CharField(
         max_length=100,
         blank=True,
         help_text=_("Color or markings (optional).")
     )
 
     # === Location INFO ===
-    location: models.OneToOneField = models.OneToOneField(
+    location = models.OneToOneField(
         Location,
         on_delete=models.SET_NULL,
         blank=True,
@@ -142,19 +139,6 @@ class BasePost(models.Model):
         default=False,
         help_text=_("Show email ")
     )
-
-    # contact_phone = PhoneNumberField(
-    # blank=True,
-    # null=True,
-    # help_text=_("Optional phone.")
-    # )
-
-    # contact_email = models.EmailField(
-    # max_length=100,
-    # blank=True,
-    # null=True,
-    # help_text=_("Optional email")
-    # )
 
     # === STATUS & METADATA ===
     status = models.CharField(
@@ -209,14 +193,14 @@ class BasePost(models.Model):
 
     def clean(self):
         #  location validation
-        if isinstance(self, Lost_post):
+        if isinstance(self, LostPost):
             if not self.location or not (
                     self.location.point or self.location.city or self.location.country
             ):
                 raise ValidationError(
                     "For lost pets, you must provide a location (coordinates or at least city/country)."
                 )
-        elif isinstance(self, (Found_post, Surrender_custody_pets)):
+        elif isinstance(self, (FoundPost, SurrenderCustodyPet)):
             if self.location and not (
                     self.location.point or self.location.city or self.location.country
             ):
@@ -225,7 +209,7 @@ class BasePost(models.Model):
                 )
 
 
-class Found_post(BasePost):
+class FoundPost(BasePost):
     """
     Represents a found-pet report.
 
@@ -240,7 +224,7 @@ class Found_post(BasePost):
     )
 
 
-class Lost_post(BasePost):
+class LostPost(BasePost):
     """
     Represents a lost-pet report.
 
@@ -255,7 +239,7 @@ class Lost_post(BasePost):
     )
 
 
-class Surrender_custody_pets(BasePost):
+class SurrenderCustodyPet(BasePost):
     """
     Represents a pet being surrendered or offered for adoption.
 
@@ -279,80 +263,3 @@ class Surrender_custody_pets(BasePost):
     vaccination: models.BooleanField = models.BooleanField(default=False)
 
     steriliz: models.BooleanField = models.BooleanField(default=False)
-
-    # breed_size = models.CharField(
-    # max_length=10,
-    # choices=PetSIZES.choices,
-    # default=PetSIZES.OTHER,
-    # blank=True,
-    # null=True,
-    # help_text=_("Select the typical size of the breed(optional).")
-
-    # )
-
-    # health_status = models.CharField(
-    # max_length=10,
-    # choices=HealthStatus.choices,
-    # default=HealthStatus.UNKNOWN,
-    # blank=False,
-    # null=False,
-    # help_text=_("Select the current health condition of the pet.")
-    # )
-
-    # country_of_origin = models.CharField(
-    # max_length=100,
-    # blank=True,
-    # null=True,
-    # help_text=_("Enter the country where this breed is originally from (optional).")
-    # )
-
-    # suitable_for = models.CharField(
-    # max_length=100,
-    # choices=SUITABILITY.choices,
-    # default=SUITABILITY.OTHER,
-    # blank=True,
-    # null=True,
-    # help_text=_("Select what type of home this pet.")
-    # )
-
-    # average_lifespan = models.PositiveIntegerField(
-    # blank=True,
-    # null=True,
-    # help_text=_("Enter the average lifespan of this breed in years (optional).")
-    # )
-
-# class Lost_post(BasePost):
-# pass
-
-# breed = models.CharField(
-#     max_length=100,
-#     blank=True,
-#     help_text=_("Breed of the pet (leave blank if unknown)")
-# )
-
-# color = models.CharField(
-#     max_length=100,
-#     help_text=_("Color and distinctive markings")
-# )
-
-# # EXACT AGE - for owners who know precise age
-# age = models.CharField(
-#     max_length=50,
-#     blank=True,
-#     help_text=_("Exact age (e.g., '2 years 3 months', '8 months', '5 years')")
-# )
-
-
-# # EXACT AGE - for owners who know precise age
-# age = models.CharField(
-#     max_length=50,
-#     blank=True,
-#     help_text=_("Exact age (e.g., '2 years 3 months', '8 months', '5 years')")
-# )
-
-
-# images = models.JSONField(
-#   default=list,
-#    blank=True,
-#   help_text=_("List of image URLs for the post")
-# )

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -39,11 +40,13 @@ ALLOWED_HOSTS = []
 #   and so to be used in automations (and maybe other locations as well)
 
 THIRD_PARTY_APPS = [
+    "corsheaders",
     "rest_framework",
     "django_extensions",
     "channels",
     "imagekit",
     "daphne",
+    "rest_framework_simplejwt",
 ]
 
 LOCAL_APPS = [
@@ -52,6 +55,7 @@ LOCAL_APPS = [
     "users",
     "locations",
     "petoria",
+    "success_story",
 ]
 
 INSTALLED_APPS = (
@@ -69,6 +73,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -189,6 +194,7 @@ AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -196,9 +202,24 @@ REST_FRAMEWORK = {
     ],
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "youremail@gmail.com"
-EMAIL_HOST_PASSWORD = "12345"
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=15),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+}
+
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "youremail@gmail.com"
+# EMAIL_HOST_PASSWORD = "12345"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]

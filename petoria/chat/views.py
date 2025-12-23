@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import OuterRef, Subquery
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, permissions, status
+from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.http import FileResponse
@@ -26,12 +26,12 @@ ALLOWED_VIDEO_TYPES = {
 }
 
 # ------------------------------------------------------------
-# ChatListView
+# ChatListAPI
 # Returns the list of chats for the authenticated user
 # ------------------------------------------------------------
-class ChatListView(generics.ListAPIView):
+class ChatListAPI(generics.ListAPIView):
     serializer_class = ChatSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = ChatCursorPagination
 
     def get_queryset(self):
@@ -58,12 +58,52 @@ class ChatListView(generics.ListAPIView):
         )
 
 # ------------------------------------------------------------
+# ChatWithUserAPI
+# Returns the chat id given user ids if exists
+# else returns none
+# ------------------------------------------------------------
+class ChatWithUserAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        other_user_id = kwargs.get("user_id")
+
+        if not other_user_id:
+            return Response(
+                {"error": "missing_user_id"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if str(other_user_id) == str(request.user.id):
+            return Response(
+                {"error": "cannot_chat_with_self"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # validate other user
+        try:
+            other_user = User.objects.get(id=other_user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "user_not_found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # find chat if exists
+        chat = Chat.get_chat_between(request.user, other_user)
+
+        return Response({
+            "chat_id": chat.id if chat else None
+        })
+
+
+# ------------------------------------------------------------
 # ChatMessagesListView
 # Returns paginated messages for a chat
 # ------------------------------------------------------------
-class ChatMessagesListView(generics.ListAPIView):
+class ChatMessagesListAPI(generics.ListAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = MessageCursorPagination
 
     def get_queryset(self):
@@ -83,7 +123,7 @@ class ChatMessagesListView(generics.ListAPIView):
 # AttachmentUploadView
 # Upload an attachment (image/video/other) and return metadata
 # ------------------------------------------------------------
-class AttachmentUploadView(APIView):
+class AttachmentUploadAPI(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
@@ -127,7 +167,7 @@ class AttachmentUploadView(APIView):
 # AttachmentDownloadView
 # Download an attachment if the requester is a chat participant
 # ------------------------------------------------------------
-class AttachmentDownloadView(APIView):
+class AttachmentDownloadAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, attachment_id, *args, **kwargs):
@@ -159,42 +199,3 @@ class AttachmentDownloadView(APIView):
         response["Content-Length"] = attachment.size
         response["Content-Disposition"] = f'inline; filename="{attachment.file.name.split("/")[-1]}"'
         return response
-
-# ------------------------------------------------------------
-# ChatWithUserAPIView
-# Returns the chat id given user ids if exists
-# else returns none
-# ------------------------------------------------------------
-class ChatWithUserAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        other_user_id = request.query_params.get("user_id")
-
-        if not other_user_id:
-            return Response(
-                {"error": "missing_user_id"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if str(other_user_id) == str(request.user.id):
-            return Response(
-                {"error": "cannot_chat_with_self"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # validate other user
-        try:
-            other_user = User.objects.get(id=other_user_id)
-        except User.DoesNotExist:
-            return Response(
-                {"error": "user_not_found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # find chat if exists
-        chat = Chat.get_chat_between(request.user, other_user)
-
-        return Response({
-            "chat_id": chat.id if chat else None
-        })

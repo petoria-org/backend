@@ -9,6 +9,7 @@ class MessageCursorPagination(CursorPagination):
 
 class ChatCursorPagination(CursorPagination):
     page_size = 20
+    ordering = '-last_message_time'
     cursor_query_param = 'cursor'
     
     def paginate_queryset(self, queryset, request, view=None):
@@ -17,5 +18,5 @@ class ChatCursorPagination(CursorPagination):
                 Max('messages__timestamp'),
                 F('created_at')
             )
-        ).order_by('-last_message_time')
+        )
         return super().paginate_queryset(queryset, request, view)
