@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import LostPost, FoundPost, SurrenderCustodyPet
+from .models import LostPost, FoundPost, SurrenderCustodyPet
 from .models import PostImage
 from .pagination import PostPagination
 from .serializers import (
@@ -15,16 +16,6 @@ from .serializers import (
     LostPostSerializer, FoundPostSerializer, SurrenderCustodyPostSerializer,
     PostImageSerializer
 )
-
-
-from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from .models import LostPost, FoundPost, SurrenderCustodyPet
-from .serializers import (
-    LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer
-)
-from .pagination import PostPagination
 
 
 class FilterPostsAPI(APIView):
@@ -82,7 +73,6 @@ class FilterPostsAPI(APIView):
         age_range values from front-end:
         under_1, 1_2, 2_3, 3_5, 5_7
         """
-        import re
 
         if age_range == "under_1":
             return queryset.filter(pet_age__icontains="0")
