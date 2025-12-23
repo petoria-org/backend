@@ -1,13 +1,14 @@
 # Python
-__pycache__/
+__pycache__
 *.pyc
 migrations
 
 # Environment
 *venv*
+.vscode
 
 # Database
 *.sqlite3
 
 # Local Test Temporary Files e.g. test-1.py, test-2.py etc.
-test-[0-9]*.*
+test-*.*
