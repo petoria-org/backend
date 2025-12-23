@@ -2,23 +2,45 @@
 from django.urls import path
 
 from .views import (
-    LostPostListAPI,
-    LostPostDetailAPI,
-    FoundPostListAPI,
-    FoundPostDetailAPI,
-    SurrenderCustodyListAPI,
-    SurrenderCustodyDetailAPI,
+    ListCreateLostPostAPI,
+    RetrieveUpdateDeleteLostPostAPI,
+    ListCreateFoundPostAPI,
+    RetrieveUpdateDeleteFoundPostAPI,
+    ListCreateCustodyAPI,
+    RetrieveUpdateDeleteCustodyAPI,
+    ListAllPostsAPI,
+    ListUserLostPostsAPI,
+    ListUserFoundPostsAPI,
+    ListUserCustodyPostsAPI,
+    ListAllPostsUserAPI,
+    UploadPostImageAPI,
+    DeletePostImageAPI,
+    FilterPostsAPI
 )
 
 urlpatterns = [
+    path("images/upload/", UploadPostImageAPI.as_view(), name="post-image-upload"),
+    path("images/<int:image_id>/", DeletePostImageAPI.as_view(), name="post-image-delete"),
 
-    path("api/lost-posts/", LostPostListAPI.as_view(), name="lostpost-list-create"),
-    path("api/lost-posts/<int:pk>/", LostPostDetailAPI.as_view(), name="lostpost-detail"),
+    path("lost-posts/", ListCreateLostPostAPI.as_view(), name="lostpost-list-create"),
+    path("lost-posts/<int:pk>/", RetrieveUpdateDeleteLostPostAPI.as_view(), name="lostpost-detail"),
 
-    path("api/found-posts/", FoundPostListAPI.as_view(), name="foundpost-list-create"),
-    path("api/found-posts/<int:pk>/", FoundPostDetailAPI.as_view(), name="foundpost-detail"),
+    path("found-posts/", ListCreateFoundPostAPI.as_view(), name="foundpost-list-create"),
+    path("found-posts/<int:pk>/", RetrieveUpdateDeleteFoundPostAPI.as_view(), name="foundpost-detail"),
 
-    path("api/surrender-posts/", SurrenderCustodyListAPI.as_view(), name="surrenderpost-list-create"),
-    path("api/surrender-posts/<int:pk>/", SurrenderCustodyDetailAPI.as_view(),
+    path("surrender-posts/", ListCreateCustodyAPI.as_view(), name="surrenderpost-list-create"),
+    path("surrender-posts/<int:pk>/", RetrieveUpdateDeleteCustodyAPI.as_view(),
          name="surrenderpost-detail"),
+
+    # All posts mixed feed
+    path("all/", ListAllPostsAPI.as_view()),
+
+    # User-specific posts
+    path("user/lost/", ListUserLostPostsAPI.as_view()),
+    path("user/found/", ListUserFoundPostsAPI.as_view()),
+    path("user/surrender/", ListUserCustodyPostsAPI.as_view()),
+    path("user/all/", ListAllPostsUserAPI.as_view()),
+
+    path("filter/", FilterPostsAPI.as_view(), name="filter-posts"),
+
 ]

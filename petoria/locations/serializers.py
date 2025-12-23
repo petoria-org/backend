@@ -1,35 +1,25 @@
-# locations/serializers.py
 from rest_framework import serializers
+from django.contrib.gis.geos import Point
 from .models import Location
 
-
 class LocationSerializer(serializers.ModelSerializer):
-    latitude = serializers.SerializerMethodField()
-    longitude = serializers.SerializerMethodField()
-    readable = serializers.SerializerMethodField()
+    latitude = serializers.FloatField(write_only=True)
+    longitude = serializers.FloatField(write_only=True)
 
     class Meta:
         model = Location
-        fields = [
-            "id",
-            "country",
-            "city",
-            "district",
-            "latitude",
-            "longitude",
-            "readable",
-        ]
+        fields = ["id", "country", "city", "district", "full_address", "latitude", "longitude"]
+        read_only_fields = ["country", "city", "district", "full_address"]
 
-    def get_latitude(self, obj):
-        return obj.point.y if obj.point else None
+    def create(self, validated_data):
+        lat = validated_data.pop('latitude')
+        lon = validated_data.pop('longitude')
+        validated_data['point'] = Point(lon, lat) # دقت کنید: ابتدا طول جغرافیایی
+        return super().create(validated_data)
 
-    def get_longitude(self, obj):
-        return obj.point.x if obj.point else None
-
-    def get_readable(self, obj):
-        if obj.point:
-            return f"{obj.city}, {obj.country}"
-        parts = [obj.country, obj.city]
-        if obj.district:
-            parts.append(obj.district)
-        return ", ".join(parts) or "Unknown"
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.point:
+            ret['latitude'] = instance.point.y
+            ret['longitude'] = instance.point.x
+        return ret
