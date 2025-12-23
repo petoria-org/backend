@@ -1,5 +1,5 @@
 from typing import Any, List, Dict
-
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -205,7 +205,9 @@ class RetrieveUpdateDeleteLostPostAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
 
-        serializer = LostPostSerializer(post, data=request.data, partial=True, context={"request": request})
+        updated_data = request.data.copy()
+        updated_data["updated_at"] = timezone.now().isoformat()
+        serializer = LostPostSerializer(post, data=updated_data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -257,7 +259,9 @@ class RetrieveUpdateDeleteFoundPostAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
 
-        serializer = FoundPostSerializer(post, data=request.data, partial=True, context={"request": request})
+        updated_data = request.data.copy()
+        updated_data["updated_at"] = timezone.now().isoformat()
+        serializer = FoundPostSerializer(post, data=updated_data, partial=True, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -308,8 +312,11 @@ class RetrieveUpdateDeleteCustodyAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
-
-        serializer = SurrenderCustodyPostSerializer(post, data=request.data, partial=True, context={"request": request})
+        
+        updated_data = request.data.copy()
+        updated_data["updated_at"] = timezone.now().isoformat()
+        serializer = SurrenderCustodyPostSerializer(post, data=updated_data, partial=True, context={"request": request})
+        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

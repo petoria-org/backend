@@ -154,18 +154,30 @@ class BasePostSerializer(serializers.ModelSerializer):
 # Child Serializers
 # ------------------------------
 class LostPostSerializer(BasePostSerializer):
+    pet_type = serializers.SerializerMethodField(read_only=True)
+
     class Meta(BasePostSerializer.Meta):
         model = LostPost
-        fields = BasePostSerializer.Meta.fields + ["lost_time"]
+        fields = BasePostSerializer.Meta.fields + ["lost_time", "pet_type"]
+    
+    def get_pet_type(self, obj):
+        return " lost"
 
 
 class FoundPostSerializer(BasePostSerializer):
+    pet_type = serializers.SerializerMethodField(read_only=True)
+
     class Meta(BasePostSerializer.Meta):
         model = FoundPost
-        fields = BasePostSerializer.Meta.fields + ["found_time"]
+        fields = BasePostSerializer.Meta.fields + ["found_time", "pet_type"]
+
+    def get_pet_type(self, obj):
+        return "found"
 
 
 class SurrenderCustodyPostSerializer(BasePostSerializer):
+    pet_type = serializers.SerializerMethodField(read_only=True)
+    
     class Meta(BasePostSerializer.Meta):
         model = SurrenderCustodyPet
         fields = BasePostSerializer.Meta.fields + [
@@ -173,7 +185,11 @@ class SurrenderCustodyPostSerializer(BasePostSerializer):
             "has_birth_certificate",
             "vaccination",
             "steriliz",
+            "pet_type"
         ]
+    
+    def get_pet_type(self, obj):
+        return "adoption"
 
 
 # ------------------------------
@@ -195,7 +211,7 @@ class LostPostListSerializer(serializers.ModelSerializer):
             "location",
             "lost_time",
             "thumbnail",
-            "created_at"
+            "updated_at"
         ]
 
     def get_thumbnail(self, obj):
@@ -223,7 +239,7 @@ class FoundPostListSerializer(serializers.ModelSerializer):
             "location",
             "found_time",
             "thumbnail",
-            "created_at"
+            "updated_at"
         ]
 
     def get_thumbnail(self, obj):
@@ -250,7 +266,7 @@ class SurrenderPostListSerializer(serializers.ModelSerializer):
             "pet_type",
             "location",
             "thumbnail",
-            "created_at"
+            "updated_at"
         ]
 
     def get_thumbnail(self, obj):
