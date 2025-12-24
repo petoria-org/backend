@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 from .pagination import PostPagination
@@ -18,11 +19,12 @@ from .serializers import (
 # ================================
 class UploadPostImageAPI(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        uploaded = request.FILES.get("image")
+        uploaded = request.FILES.get("image") or request.FILES.get("file")
         if not uploaded:
-            return Response({"error": "No image provided."}, status=400)
+            return Response({"error": "No image provided. Use form-data key 'image' or 'file'."}, status=400)
 
         content_type = (uploaded.content_type or "").lower()
         size = uploaded.size

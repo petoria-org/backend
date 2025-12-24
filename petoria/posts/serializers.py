@@ -8,9 +8,17 @@ from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 
 
 class PostImageSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(read_only=True)
+    thumbnail = serializers.SerializerMethodField()
+
     class Meta:
         model = PostImage
         fields = ["id", "image", "thumbnail"]
+
+    def get_thumbnail(self, obj):
+        thumb = getattr(obj, "thumbnail", None)
+        # Return a URL if available; otherwise None so we don't try to serialize raw bytes
+        return getattr(thumb, "url", None) if thumb else None
 
 
 class BasePostSerializer(serializers.ModelSerializer):
