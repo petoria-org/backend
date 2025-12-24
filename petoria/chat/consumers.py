@@ -117,19 +117,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Case 2: First message → recipient_id required
         elif not recipient_id:
-            return await self.send_error("missing_recipient_id")
+            return await self.send_error("missing recipient_id and chat_id")
 
         else:
             try: recipient = await self.get_user(recipient_id)
             
             except ObjectDoesNotExist:
-                return await self.send_error("recipient_not_found")
-
+                return await self.send_error("recipient not found")
+            
+            if self.user == recipient:
+                return await self.send_error("cant make a chat with yourself")
+            
             chat = await self.get_or_create_chat(self.user, recipient)
             chat_id = chat.id
 
             if reply_to_id:
-                return await self.send_error("invalid_reply_target")
+                return await self.send_error("invalid reply target")
 
         try:
             validated_attachment_ids = await self.validate_attachments(attachment_ids)
@@ -315,6 +318,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "id": msg.reply_to.id,
                     "sender_id": msg.reply_to.sender_id,
+                    "sender_name": msg.reply_to.sender.username,
                     "content": msg.reply_to.content
                 }
                 if msg.reply_to else None
