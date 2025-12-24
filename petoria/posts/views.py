@@ -91,7 +91,7 @@ class ListAllPostsUserAPI(APIView):
             data["type"] = "surrender"
             combined.append(data)
 
-        combined.sort(key=lambda x: x["created_at"], reverse=True)
+        combined.sort(key=lambda x: x["updated_at"], reverse=True)
 
         paginator = PostPagination()
         page = paginator.paginate_queryset(combined, request)
@@ -105,7 +105,7 @@ class ListUserLostPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        posts = LostPost.objects.filter(user=request.user).order_by("-created_at")
+        posts = LostPost.objects.filter(user=request.user).order_by("-updated_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = LostPostListSerializer(page, many=True)
@@ -116,7 +116,7 @@ class ListUserFoundPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        posts = FoundPost.objects.filter(user=request.user).order_by("-created_at")
+        posts = FoundPost.objects.filter(user=request.user).order_by("-updated_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = FoundPostListSerializer(page, many=True)
@@ -127,7 +127,7 @@ class ListUserCustodyPostsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        posts = SurrenderCustodyPet.objects.filter(user=request.user).order_by("-created_at")
+        posts = SurrenderCustodyPet.objects.filter(user=request.user).order_by("-updated_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = SurrenderPostListSerializer(page, many=True)
@@ -141,9 +141,9 @@ class ListAllPostsAPI(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        lost = LostPost.objects.all().order_by("-created_at")
-        found = FoundPost.objects.all().order_by("-created_at")
-        surrender = SurrenderCustodyPet.objects.all().order_by("-created_at")
+        lost = LostPost.objects.all().order_by("-updated_at")
+        found = FoundPost.objects.all().order_by("-updated_at")
+        surrender = SurrenderCustodyPet.objects.all().order_by("-updated_at")
 
         combined = []
 
@@ -162,7 +162,7 @@ class ListAllPostsAPI(APIView):
             data["type"] = "surrender"
             combined.append(data)
 
-        combined.sort(key=lambda x: x["created_at"], reverse=True)
+        combined.sort(key=lambda x: x["updated_at"], reverse=True)
 
         paginator = PostPagination()
         page = paginator.paginate_queryset(combined, request)
@@ -230,7 +230,7 @@ class ListCreateFoundPostAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = FoundPost.objects.all().order_by('-created_at')
+        posts = FoundPost.objects.all().order_by('-updated_at')
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = FoundPostListSerializer(page, many=True)
@@ -284,7 +284,7 @@ class ListCreateCustodyAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = SurrenderCustodyPet.objects.all().order_by('-created_at')
+        posts = SurrenderCustodyPet.objects.all().order_by('-updated_at')
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = SurrenderPostListSerializer(page, many=True)
