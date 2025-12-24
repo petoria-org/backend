@@ -44,7 +44,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "django_extensions",
     "channels",
-    "imagekit",
     "daphne",
     "rest_framework_simplejwt",
 ]

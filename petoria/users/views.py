@@ -7,6 +7,7 @@ from django.utils import timezone
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -295,3 +296,37 @@ class UserProfileView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+
+class UserProfilePictureView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        uploaded = request.FILES.get("profile_picture")
+        if not uploaded:
+            return Response({"error": "No profile picture provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        content_type = (uploaded.content_type or "").lower()
+        allowed_types = {"image/jpeg", "image/png", "image/webp"}
+        if content_type not in allowed_types:
+            return Response({"error": "Unsupported file type."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        default_name = user._meta.get_field("profile_picture").get_default()
+        if user.profile_picture and user.profile_picture.name != default_name:
+            user.profile_picture.delete(save=False)
+
+        user.profile_picture = uploaded
+        user.save(update_fields=["profile_picture"])
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        user = request.user
+        default_name = user._meta.get_field("profile_picture").get_default()
+        if user.profile_picture and user.profile_picture.name != default_name:
+            user.profile_picture.delete(save=False)
+
+        user.profile_picture = default_name
+        user.save(update_fields=["profile_picture"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

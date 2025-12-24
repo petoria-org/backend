@@ -5,8 +5,6 @@ from uuid import uuid4
 from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models
 from django.utils import timezone
-from imagekit.models import ProcessedImageField
-from imagekit.processors import ResizeToFill
 from locations.models import Location
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -59,11 +57,8 @@ class User(AbstractUser):
 
     # === Profile Information ===
 
-    profile_picture = ProcessedImageField(
+    profile_picture = models.ImageField(
         upload_to=user_avatar_path,
-        format='JPEG',
-        processors=[ResizeToFill(300, 300)],
-        options={'quality': 90},
         null=True,
         blank=True,
         default='profile_pics/default_avatar.png',

@@ -28,7 +28,7 @@ class UploadPostImageAPI(APIView):
 
         content_type = (uploaded.content_type or "").lower()
         size = uploaded.size
-        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+        allowed_types = {"image/jpeg", "image/png", "image/webp"}
         max_size = 10 * 1024 * 1024  # 10 MB
 
         if content_type not in allowed_types:
