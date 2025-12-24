@@ -22,18 +22,33 @@ class SuccessStory(models.Model):
     )
 
     story = models.TextField(
-        max_length=1000,
-        help_text=_("شرح داستان موفقیت خود را بنویسید.")
+        max_length=1000
     )
+    
     story_type = models.CharField(
         max_length=20,
         choices=STORY_TYPE_CHOICES
 
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     # image
     def __str__(self):
-        return f"{self.user.username} - {self.post_type} - {self.created_at.date()}"
+        return f"{self.user.username} - {self.story_type} - {self.created_at.date()}"
 
 
+class SuccessStoryImage(models.Model):
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="success_story_images",
+    )
+    success_story = models.ForeignKey(
+        SuccessStory,
+        on_delete=models.CASCADE,
+        related_name="images",
+        null=True,
+        blank=True,
+    )
+    image = models.ImageField(upload_to="success_stories/")
+    created_at = models.DateTimeField(auto_now_add=True)
