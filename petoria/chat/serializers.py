@@ -37,19 +37,18 @@ class AttachmentSerializer(serializers.ModelSerializer):
         return path
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender_id = serializers.IntegerField(source='sender_id', read_only=True)
+    sender_id = serializers.IntegerField(read_only=True)
     sender_name = serializers.CharField(source='sender.username', read_only=True)
     sender_profile_picture = serializers.SerializerMethodField()
     attachments = AttachmentSerializer(many=True, read_only=True)
     reply_to = serializers.SerializerMethodField()
-    chat_id = serializers.IntegerField(source="chat_id", read_only=True)
+    chat_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Message
         fields = [
             'id',
             'chat_id',
-            'sender',
             'sender_id',
             'sender_name',
             'sender_profile_picture',
