@@ -206,6 +206,8 @@ class RetrieveUpdateDeleteLostPostAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
 
         updated_data = request.data.copy()
         updated_data["updated_at"] = timezone.now().isoformat()
@@ -219,6 +221,8 @@ class RetrieveUpdateDeleteLostPostAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
         post.delete()
         return Response(status=204)
 
@@ -260,6 +264,8 @@ class RetrieveUpdateDeleteFoundPostAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
 
         updated_data = request.data.copy()
         updated_data["updated_at"] = timezone.now().isoformat()
@@ -273,6 +279,8 @@ class RetrieveUpdateDeleteFoundPostAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
         post.delete()
         return Response(status=204)
 
@@ -315,6 +323,9 @@ class RetrieveUpdateDeleteCustodyAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
         
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
+        
         updated_data = request.data.copy()
         updated_data["updated_at"] = timezone.now().isoformat()
         serializer = SurrenderCustodyPostSerializer(post, data=updated_data, partial=True, context={"request": request})
@@ -328,5 +339,9 @@ class RetrieveUpdateDeleteCustodyAPI(APIView):
         post = self.get_object(pk)
         if not post:
             return Response({"error": "Not Found"}, 404)
+        
+        if request.user != post.user:
+            return Response({"error": "Not permitted to edit this post"}, status=403)
+        
         post.delete()
         return Response(status=204)
