@@ -46,7 +46,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
         if action == "mark_read":
-            return await self.mark_chat_read(
+            return await self.mark_as_read(
                 data.get("chat_id"),
                 data.get("message_ids", [])
             )
@@ -122,7 +122,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 
         # Realtime update to both users
-        await self.broadcast_chat_update(chat_id, serialized)
+        await self.broadcast_message_update(chat_id, serialized)
 
         return await self.send_json({
             "type": "message_sent",
@@ -133,7 +133,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # --------------------------------------------------------
     # ACTION: MARK CHAT AS READ
     # --------------------------------------------------------
-    async def mark_chat_read(self, chat_id, message_ids):
+    async def mark_as_read(self, chat_id, message_ids):
         if not chat_id:
             return await self.send_error("missing_chat_id")
     
@@ -148,17 +148,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             chat_id, self.user.id, message_ids
         )
     
-        # send read receipt ONLY to users inside chat window
-        await self.channel_layer.group_send(
-            f"chat_{chat_id}",
-            {
-                "type": "chat.read",
-                "reader_id": self.user.id,
-                "message_ids": updated_ids,
-            }
-        )
-        await self.broadcast_read_update_to_inbox(chat_id)
-
+        await self.broadcast_read_update(chat_id, updated_ids)
         return await self.send_json({
             "type": "marked_read",
             "message_ids": updated_ids
@@ -168,18 +158,62 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # --------------------------------------------------------
     # CHANNEL LAYER HANDLERS
     # --------------------------------------------------------
-    async def chat_message(self, event):
-        await self.send_json({"type": "new_message", "message": event["message"]})
+    async def message_update(self, event):
+        await self.send_json({"type": "message_update", "chat": event["chat"]})
 
-    async def chat_read(self, event):
-        await self.send_json({
-            "type": "read_receipt",
-            "reader_id": event["reader_id"],
-            "message_ids": event["message_ids"]
-        })
+    async def read_update(self, event):
+        await self.send_json({"type": "read_update", "chat": event["chat"]})
 
-    async def chat_list_update(self, event):
-        await self.send_json({"type": "chat_list_update", "chat": event["chat"]})
+    # --------------------------------------------------------
+    # BROADCAST HELPERS
+    # --------------------------------------------------------
+    async def broadcast_message_update(self, chat_id, last_message):
+        participants = await self.get_chat_participant_ids(chat_id)
+
+        chat_preview = {
+            "id": chat_id,
+            "last_message": last_message,
+        }
+
+        for uid in participants:
+            unread = await self.get_unread(uid, chat_id)
+            chat_preview["unread_count"] = unread
+
+            await self.channel_layer.group_send(
+                f"user_{uid}",
+                {
+                    "type": "message_update",
+                    "chat": chat_preview
+                }
+            )
+
+    async def broadcast_read_update(self, chat_id, updated_ids):
+        unread_count = await self.get_unread(self.user.id, chat_id)
+        participants = await self.get_chat_participant_ids(chat_id)
+        for uid in participants:
+            update = {
+                "id": chat_id,
+                "reader_id": self.user.id,
+                "unread_count": unread_count,
+                "updated_ids": updated_ids
+            }
+            await self.channel_layer.group_send(
+                f"user_{uid}",
+                {
+                    "type": "read_update",
+                    "chat": update
+                }
+            )
+
+    # --------------------------------------------------------
+    # RESPONSE HELPERS
+    # --------------------------------------------------------
+    async def send_json(self, data):
+        await self.send(text_data=json.dumps(data))
+
+    async def send_error(self, msg):
+        await self.send_json({"type": "error", "message": msg})
+
 
     # --------------------------------------------------------
     # DB HELPERS
@@ -318,68 +352,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             raise ValueError("some attachments invalid")
 
         return ids
-    
-    @database_sync_to_async
-    def mark_as_read(self, chat_id, user_id):
-        # IDs of unread messages
-        ids = list(
-            Message.objects.filter(chat_id=chat_id, is_read=False)
-            .exclude(sender_id=user_id)
-            .values_list("id", flat=True)
-        )
-
-        # mark messages read
-        Message.objects.filter(id__in=ids).update(is_read=True)
-
-        # reset unread counter
-        ChatParticipant.objects.filter(chat_id=chat_id, user_id=user_id).update(unread_count=0)
-
-        return ids
 
     @database_sync_to_async
     def get_chat_participant_ids(self, chat_id):
         return list(Chat.objects.get(id=chat_id).participants.values_list("id", flat=True))
-
-    async def broadcast_chat_update(self, chat_id, last_message):
-        participants = await self.get_chat_participant_ids(chat_id)
-
-        chat_preview = {
-            "id": chat_id,
-            "last_message": last_message,
-        }
-
-        for uid in participants:
-            unread = await self.get_unread(uid, chat_id)
-            chat_preview["unread_count"] = unread
-
-            await self.channel_layer.group_send(
-                f"user_{uid}",
-                {
-                    "type": "chat_update",
-                    "chat": chat_preview
-                }
-            )
-    
-    async def broadcast_read_update_to_inbox(self, chat_id):
-        unread_count = await self.get_unread(self.user.id, chat_id)
-        if unread_count != 0:
-            return
-        
-        participants = await self.get_chat_participant_ids(chat_id)
-        for uid in participants:
-    
-            update = {
-                "id": chat_id,
-                "seen" : True
-            }
-    
-            await self.channel_layer.group_send(
-                f"user_{uid}",
-                {
-                    "type": "chat_list_update",
-                    "chat": update
-                }
-            )
 
     @database_sync_to_async
     def get_unread(self, user_id, chat_id):
@@ -387,9 +363,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return ChatParticipant.objects.get(user_id=user_id, chat_id=chat_id).unread_count
         except ChatParticipant.DoesNotExist:
             return 0
-
-    async def send_json(self, data):
-        await self.send(text_data=json.dumps(data))
-
-    async def send_error(self, msg):
-        await self.send_json({"type": "error", "message": msg})
