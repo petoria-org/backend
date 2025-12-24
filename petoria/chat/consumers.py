@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .models import Chat, Message, ChatParticipant, Attachment
 from users.models import User
+from django.urls import reverse
 from django.db.models import F
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -294,7 +295,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 "id": att.id,
                 "url": att.file.url,
-                "download_url": f"/chat/attachments/{att.id}/download/",
+                "download_url": reverse("chat-attachment-download", args=[att.id]),
                 "type": att.type,
                 "content_type": att.content_type,
                 "size": att.size,

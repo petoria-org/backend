@@ -1,5 +1,6 @@
 import random
 from datetime import timedelta
+from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models
@@ -8,6 +9,14 @@ from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 from locations.models import Location
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+def user_avatar_path(instance, filename):
+    ext = filename.split(".")[-1] if "." in filename else ""
+    # Use user id to shard; fall back to tmp until the user is saved
+    user_id = instance.id or "tmp"
+    suffix = f".{ext}" if ext else ""
+    return f"profile_pics/{user_id}/{uuid4().hex}{suffix}"
 
 
 class User(AbstractUser):
@@ -51,7 +60,7 @@ class User(AbstractUser):
     # === Profile Information ===
 
     profile_picture = ProcessedImageField(
-        upload_to='profile_pics/',
+        upload_to=user_avatar_path,
         format='JPEG',
         processors=[ResizeToFill(300, 300)],
         options={'quality': 90},
