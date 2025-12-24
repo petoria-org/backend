@@ -85,22 +85,44 @@ class BasePostSerializer(serializers.ModelSerializer):
 
         # Ensure IDs are unique
         unique_ids = list(set(image_ids))
+
+        # Fetch all images for this user, whether bound or not
         images = PostImage.objects.filter(
             id__in=unique_ids,
-            uploaded_by=user,
-            content_type__isnull=True,
-            object_id__isnull=True
+            uploaded_by=user
         )
 
-        if images.count() != len(unique_ids):
-            raise serializers.ValidationError({"image_ids": "One or more image IDs are invalid or already bound."})
+        found_ids = {img.id for img in images}
+        missing_ids = [img_id for img_id in unique_ids if img_id not in found_ids]
+
+        # Allow already-bound images if they belong to this instance (so re-sending does not error)
+        ct = ContentType.objects.get_for_model(instance.__class__)
+        bound_to_other = []
+        new_image_ids = []
+        for img in images:
+            if img.content_type_id is None and img.object_id is None:
+                new_image_ids.append(img.id)
+            elif img.content_type_id == ct.id and img.object_id == instance.id:
+                # Already bound to this post; allow and skip rebinding
+                continue
+            else:
+                bound_to_other.append(img.id)
+
+        if missing_ids or bound_to_other:
+            raise serializers.ValidationError(
+                {
+                    "image_ids": "One or more image IDs are invalid or already bound to another post.",
+                    "missing_ids": missing_ids,
+                    "bound_elsewhere": bound_to_other,
+                }
+            )
 
         existing_count = instance.images.count()
-        if existing_count + images.count() > 7:
+        if existing_count + len(new_image_ids) > 7:
             raise serializers.ValidationError({"images": "Each post cannot have more than 7 photos."})
 
-        ct = ContentType.objects.get_for_model(instance.__class__)
-        PostImage.objects.filter(id__in=unique_ids).update(content_type=ct, object_id=instance.id)
+        if new_image_ids:
+            PostImage.objects.filter(id__in=new_image_ids).update(content_type=ct, object_id=instance.id)
 
     def _handle_location(self, instance, location_data):
         """
@@ -166,9 +188,9 @@ class LostPostSerializer(BasePostSerializer):
 
     class Meta(BasePostSerializer.Meta):
         model = LostPost
-        fields = BasePostSerializer.Meta.fields + ["lost_time", "pet_type"]
+        fields = BasePostSerializer.Meta.fields + ["lost_time", "post_type"]
     
-    def get_pet_type(self, obj):
+    def get_post_type(self, obj):
         return " lost"
 
 
@@ -177,9 +199,9 @@ class FoundPostSerializer(BasePostSerializer):
 
     class Meta(BasePostSerializer.Meta):
         model = FoundPost
-        fields = BasePostSerializer.Meta.fields + ["found_time", "pet_type"]
+        fields = BasePostSerializer.Meta.fields + ["found_time", "post_type"]
 
-    def get_pet_type(self, obj):
+    def get_post_type(self, obj):
         return "found"
 
 
@@ -193,10 +215,10 @@ class SurrenderCustodyPostSerializer(BasePostSerializer):
             "has_birth_certificate",
             "vaccination",
             "steriliz",
-            "pet_type"
+            "post_type"
         ]
     
-    def get_pet_type(self, obj):
+    def get_post_type(self, obj):
         return "adoption"
 
 
@@ -235,7 +257,7 @@ class LostPostListSerializer(serializers.ModelSerializer):
 class FoundPostListSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField(read_only=True)
     location = LocationSerializer(read_only=True)
-    pet_type = serializers.SerializerMethodField(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = FoundPost
@@ -257,20 +279,20 @@ class FoundPostListSerializer(serializers.ModelSerializer):
             return obj.images.first().thumbnail.url
         return None
     
-    def get_pet_type(self, obj):
+    def get_post_type(self, obj):
         return "found"
 
 
 class SurrenderPostListSerializer(serializers.ModelSerializer):
     thumbnail: str = serializers.SerializerMethodField()
     location = LocationSerializer(read_only=True)
-    pet_type = serializers.SerializerMethodField(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = SurrenderCustodyPet
         fields =[
             "id",
-            "pet_type",
+            "post_type",
             "title",
             "breed",
             "description",
@@ -285,5 +307,5 @@ class SurrenderPostListSerializer(serializers.ModelSerializer):
             return obj.images.first().thumbnail.url
         return None
     
-    def get_pet_type(self, obj):
+    def get_post_type(self, obj):
         return "adoption"
