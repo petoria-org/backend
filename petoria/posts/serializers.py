@@ -34,6 +34,7 @@ class BasePostSerializer(serializers.ModelSerializer):
             "location",
             "contact_phone", "contact_email",
             "status",
+            "images",
             "image_ids",
             "created_at", "updated_at",
         ]
