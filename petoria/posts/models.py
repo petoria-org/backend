@@ -4,8 +4,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from imagekit.models import ImageSpecField
-from imagekit.processors import ResizeToFill
 from locations.models import Location
 from users.models import User
 
@@ -33,7 +31,6 @@ class PostImage(models.Model):
     image = models.ImageField(upload_to="posts/")
     created_at = models.DateTimeField(auto_now_add=True)
 
-    thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(300, 300)])
 
 
 class BasePost(models.Model):

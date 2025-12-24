@@ -9,16 +9,10 @@ from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
 
 class PostImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(read_only=True)
-    thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = PostImage
-        fields = ["id", "image", "thumbnail"]
-
-    def get_thumbnail(self, obj):
-        thumb = getattr(obj, "thumbnail", None)
-        # Return a URL if available; otherwise None so we don't try to serialize raw bytes
-        return getattr(thumb, "url", None) if thumb else None
+        fields = ["id", "image"]
 
 
 class BasePostSerializer(serializers.ModelSerializer):
@@ -184,7 +178,7 @@ class BasePostSerializer(serializers.ModelSerializer):
 # Child Serializers
 # ------------------------------
 class LostPostSerializer(BasePostSerializer):
-    pet_type = serializers.SerializerMethodField(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta(BasePostSerializer.Meta):
         model = LostPost
@@ -195,7 +189,7 @@ class LostPostSerializer(BasePostSerializer):
 
 
 class FoundPostSerializer(BasePostSerializer):
-    pet_type = serializers.SerializerMethodField(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
 
     class Meta(BasePostSerializer.Meta):
         model = FoundPost
@@ -206,7 +200,7 @@ class FoundPostSerializer(BasePostSerializer):
 
 
 class SurrenderCustodyPostSerializer(BasePostSerializer):
-    pet_type = serializers.SerializerMethodField(read_only=True)
+    post_type = serializers.SerializerMethodField(read_only=True)
     
     class Meta(BasePostSerializer.Meta):
         model = SurrenderCustodyPet
@@ -247,7 +241,7 @@ class LostPostListSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
-            return obj.images.first().thumbnail.url
+            return obj.images.first().image.url
         return None
     
     def get_post_type(self, obj):
@@ -276,7 +270,7 @@ class FoundPostListSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
-            return obj.images.first().thumbnail.url
+            return obj.images.first().image.url
         return None
     
     def get_post_type(self, obj):
@@ -304,7 +298,7 @@ class SurrenderPostListSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.images.exists():
-            return obj.images.first().thumbnail.url
+            return obj.images.first().image.url
         return None
     
     def get_post_type(self, obj):
