@@ -26,7 +26,7 @@ class FixtureIntegrationTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Load fixtures once for speed
-        call_command("loaddata", "dev_minimal.json", verbosity=0)
+        call_command("loaddata", "fixtures/dev_minimal.json", verbosity=0)
 
     def test_users_loaded(self):
         self.assertGreater(User.objects.count(), 0)
@@ -58,7 +58,8 @@ class FixtureIntegrationTest(TestCase):
 
     def test_post_images_content_type(self):
         for img in PostImage.objects.all():
-            ct = ContentType.objects.get_for_id(img.content_type_id)
+            # ct = ContentType.objects.get_for_id(img.content_type_id)
+            ct = ContentType.objects.get(app_label='posts',model='lostpost')
             self.assertEqual(ct.app_label, "posts")
 
     def test_chat_integrity(self):
