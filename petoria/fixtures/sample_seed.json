@@ -938,5 +938,85 @@
   { "model": "posts.postimage", "pk": 129, "fields": {
     "uploaded_by": 10, "content_type": ["posts", "surrendercustodypet"], "object_id": 10,
     "image": "posts/surrender_30.jpg", "created_at": "2024-06-20T18:00:00Z"
+  }},
+
+  { "model": "success_story.successstory", "pk": 1, "fields": {
+    "user": 1, "title": "بازگشت برفی",
+    "story": "بعد از دو روز جستجو، برفی سالم به خانه برگشت. از همه ممنونم.",
+    "story_type": "lost", "created_at": "2024-06-21T10:00:00Z"
+  }},
+  { "model": "success_story.successstory", "pk": 2, "fields": {
+    "user": 2, "title": "پیدا شدن نقره",
+    "story": "با کمک همسایه‌ها نقره پیدا شد و دوباره کنار ماست.",
+    "story_type": "lost", "created_at": "2024-06-22T11:00:00Z"
+  }},
+  { "model": "success_story.successstory", "pk": 3, "fields": {
+    "user": 3, "title": "تحویل صاحب طوطی",
+    "story": "طوطی پیدا شده صاحبش را پیدا کرد و تحویل داده شد.",
+    "story_type": "found", "created_at": "2024-06-23T12:00:00Z"
+  }},
+  { "model": "success_story.successstory", "pk": 4, "fields": {
+    "user": 4, "title": "گربه پیدا شده",
+    "story": "گربه پیدا شده به صاحب اصلی‌اش رسید. خیلی خوشحالیم.",
+    "story_type": "found", "created_at": "2024-06-24T13:00:00Z"
+  }},
+  { "model": "success_story.successstory", "pk": 5, "fields": {
+    "user": 5, "title": "واگذاری موفق خرگوش",
+    "story": "خرگوش به خانواده مهربانی واگذار شد و وضعیتش عالی است.",
+    "story_type": "surrender", "created_at": "2024-06-25T14:00:00Z"
+  }},
+  { "model": "success_story.successstory", "pk": 6, "fields": {
+    "user": 6, "title": "خانه جدید برای باران",
+    "story": "باران به خانه جدید رفت و حالا در امنیت کامل زندگی می‌کند.",
+    "story_type": "surrender", "created_at": "2024-06-26T15:00:00Z"
+  }},
+
+  { "model": "success_story.successstoryimage", "pk": 1, "fields": {
+    "uploaded_by": 1, "success_story": 1,
+    "image": "success_stories/story_1_1.jpg", "created_at": "2024-06-21T10:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 2, "fields": {
+    "uploaded_by": 1, "success_story": 1,
+    "image": "success_stories/story_1_2.jpg", "created_at": "2024-06-21T10:06:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 3, "fields": {
+    "uploaded_by": 2, "success_story": 2,
+    "image": "success_stories/story_2_1.jpg", "created_at": "2024-06-22T11:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 4, "fields": {
+    "uploaded_by": 2, "success_story": 2,
+    "image": "success_stories/story_2_2.jpg", "created_at": "2024-06-22T11:06:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 5, "fields": {
+    "uploaded_by": 3, "success_story": 3,
+    "image": "success_stories/story_3_1.jpg", "created_at": "2024-06-23T12:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 6, "fields": {
+    "uploaded_by": 3, "success_story": 3,
+    "image": "success_stories/story_3_2.jpg", "created_at": "2024-06-23T12:06:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 7, "fields": {
+    "uploaded_by": 4, "success_story": 4,
+    "image": "success_stories/story_4_1.jpg", "created_at": "2024-06-24T13:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 8, "fields": {
+    "uploaded_by": 4, "success_story": 4,
+    "image": "success_stories/story_4_2.jpg", "created_at": "2024-06-24T13:06:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 9, "fields": {
+    "uploaded_by": 5, "success_story": 5,
+    "image": "success_stories/story_5_1.jpg", "created_at": "2024-06-25T14:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 10, "fields": {
+    "uploaded_by": 5, "success_story": 5,
+    "image": "success_stories/story_5_2.jpg", "created_at": "2024-06-25T14:06:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 11, "fields": {
+    "uploaded_by": 6, "success_story": 6,
+    "image": "success_stories/story_6_1.jpg", "created_at": "2024-06-26T15:05:00Z"
+  }},
+  { "model": "success_story.successstoryimage", "pk": 12, "fields": {
+    "uploaded_by": 6, "success_story": 6,
+    "image": "success_stories/story_6_2.jpg", "created_at": "2024-06-26T15:06:00Z"
   }}
 ]
