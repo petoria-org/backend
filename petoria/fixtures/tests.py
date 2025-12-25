@@ -26,7 +26,8 @@ class FixtureIntegrationTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Load fixtures once for speed
-        call_command("loaddata", "fixtures/dev_minimal.json", verbosity=0)
+        # call_command("loaddata", "fixtures/dev_minimal.json", verbosity=0)
+        call_command("loaddata", "fixtures/dev_medium.json", verbosity=0)
 
     def test_users_loaded(self):
         self.assertGreater(User.objects.count(), 0)
