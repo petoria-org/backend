@@ -24,7 +24,7 @@ class SuccessStory(models.Model):
     story = models.TextField(
         max_length=1000
     )
-    
+
     story_type = models.CharField(
         max_length=20,
         choices=STORY_TYPE_CHOICES
@@ -33,6 +33,7 @@ class SuccessStory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # image
+
     def __str__(self):
         return f"{self.user.username} - {self.story_type} - {self.created_at.date()}"
 
@@ -51,4 +52,5 @@ class SuccessStoryImage(models.Model):
         blank=True,
     )
     image = models.ImageField(upload_to="success_stories/")
+    image_url = models.URLField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
