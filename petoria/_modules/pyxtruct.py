@@ -51,10 +51,11 @@ def file_tree(path):
         tree = ast.parse(file.read())
     return build_tree(tree)
 
-# path = input("Path: ")
-# if __name__ == '__main__':
-#     path = sys.argv[1]
-#     with open(path, "r") as f:
-#         tree = ast.parse(f.read())
-#     print(path)
-#     print(build_tree(tree))
+
+if __name__ == '__main__':
+    import sys
+    path = sys.argv[1]
+    with open(path, "r") as f:
+        tree = ast.parse(f.read())
+    print(path)
+    print(build_tree(tree))

@@ -1,4 +1,5 @@
 # posts/models.py
+from xml.dom import ValidationErr
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
@@ -28,9 +29,18 @@ class PostImage(models.Model):
     )
     object_id = models.PositiveIntegerField(null=True, blank=True)
     post = GenericForeignKey("content_type", "object_id")
-    image = models.ImageField(upload_to="posts/")
-    created_at = models.DateTimeField(auto_now_add=True)
 
+    image = models.ImageField(upload_to="posts/")
+    image_url = models.URLField(null=True, blank=True)
+
+    # fmt:off
+    # if not (image or image_url):
+    #     raise ValidationErr("Either image or image_url must be provided.")
+    # elif image and image_url:
+    #     raise ValidationErr("Provide only one of image or image_url, not both.")
+    # fmt:on
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class BasePost(models.Model):
