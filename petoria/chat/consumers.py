@@ -175,15 +175,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "last_message": last_message,
         }
 
-        for uid in participants:
+        for i, uid in enumerate(participants):
+
+            other = self.get_user(participants[1-i])
             unread = await self.get_unread(uid, chat_id)
             chat_preview["unread_count"] = unread
-
+            chat_preview["other_id"] = other.id
+            chat_preview["other_username"] = other.username
+            
             await self.channel_layer.group_send(
                 f"user_{uid}",
                 {
                     "type": "message_update",
-                    "chat": chat_preview
+                    "chat": chat_preview,       
                 }
             )
 
