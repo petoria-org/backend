@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -12,6 +12,64 @@ from .serializers import (
     LostPostListSerializer, FoundPostListSerializer, SurrenderPostListSerializer,
     PostImageSerializer
 )
+
+
+def _parse_bool_param(value: Optional[str]) -> Optional[bool]:
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    if normalized in {"true", "1", "yes"}:
+        return True
+    if normalized in {"false", "0", "no"}:
+        return False
+    return None
+
+
+def _filter_age_range(queryset, age_range: str):
+    if age_range == "under_1":
+        return queryset.filter(pet_age__years=0)
+    if age_range == "1_2":
+        return queryset.filter(pet_age__years=1)
+    if age_range == "2_3":
+        return queryset.filter(pet_age__years=2)
+    if age_range == "3_5":
+        return queryset.filter(pet_age__years__in=[3, 4])
+    if age_range == "5_7":
+        return queryset.filter(pet_age__years__in=[5, 6])
+    if age_range in {"7_plus", "7_over", "over_7", "higher_than_7"}:
+        return queryset.filter(pet_age__years__gte=7)
+    return queryset
+
+
+def _apply_common_filters(queryset, params):
+    pet_type = params.get("pet_type")
+    pet_sex = params.get("pet_sex")
+    city = params.get("city")
+    age_range = params.get("pet_age_range")
+
+    if pet_type:
+        queryset = queryset.filter(pet_type=pet_type)
+    if pet_sex:
+        queryset = queryset.filter(pet_sex=pet_sex)
+    if city and city.lower() != "all":
+        queryset = queryset.filter(location__city__iexact=city)
+    if age_range:
+        queryset = _filter_age_range(queryset, age_range)
+    return queryset
+
+
+def _apply_surrender_filters(queryset, params):
+    steriliz = _parse_bool_param(params.get("steriliz"))
+    vaccination = _parse_bool_param(params.get("vaccination"))
+    birth_certificate = _parse_bool_param(params.get("has_birth_certificate"))
+
+    if steriliz is not None:
+        queryset = queryset.filter(steriliz=steriliz)
+    if vaccination is not None:
+        queryset = queryset.filter(vaccination=vaccination)
+    if birth_certificate is not None:
+        queryset = queryset.filter(has_birth_certificate=birth_certificate)
+    return queryset
 
 
 # ================================
@@ -141,9 +199,20 @@ class ListAllPostsAPI(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        lost = LostPost.objects.all().order_by("-updated_at")
-        found = FoundPost.objects.all().order_by("-updated_at")
-        surrender = SurrenderCustodyPet.objects.all().order_by("-updated_at")
+        params = request.query_params
+        lost = _apply_common_filters(
+            LostPost.objects.all().order_by("-updated_at"),
+            params,
+        )
+        found = _apply_common_filters(
+            FoundPost.objects.all().order_by("-updated_at"),
+            params,
+        )
+        surrender = _apply_common_filters(
+            SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+            params,
+        )
+        surrender = _apply_surrender_filters(surrender, params)
 
         combined = []
 
@@ -176,7 +245,10 @@ class ListCreateLostPostAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = LostPost.objects.all().order_by('-created_at')
+        posts = _apply_common_filters(
+            LostPost.objects.all().order_by("-created_at"),
+            request.query_params,
+        )
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = LostPostListSerializer(page, many=True)
@@ -234,7 +306,10 @@ class ListCreateFoundPostAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = FoundPost.objects.all().order_by('-updated_at')
+        posts = _apply_common_filters(
+            FoundPost.objects.all().order_by("-updated_at"),
+            request.query_params,
+        )
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = FoundPostListSerializer(page, many=True)
@@ -292,7 +367,11 @@ class ListCreateCustodyAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        posts = SurrenderCustodyPet.objects.all().order_by('-updated_at')
+        posts = _apply_common_filters(
+            SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+            request.query_params,
+        )
+        posts = _apply_surrender_filters(posts, request.query_params)
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = SurrenderPostListSerializer(page, many=True)
