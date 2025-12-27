@@ -1,4 +1,6 @@
 from typing import Any, List, Dict, Optional
+
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -25,50 +27,94 @@ def _parse_bool_param(value: Optional[str]) -> Optional[bool]:
     return None
 
 
-def _filter_age_range(queryset, age_range: str):
+def _parse_bool_list(values: List[str]) -> Optional[set]:
+    parsed = set()
+    for value in values:
+        parsed_value = _parse_bool_param(value)
+        if parsed_value is not None:
+            parsed.add(parsed_value)
+    return parsed or None
+
+
+def _split_list_param(params, key: str) -> List[str]:
+    raw = params.get(key, "")
+    if not raw:
+        return []
+    values: List[str] = []
+    for item in raw.split(","):
+        item = item.strip()
+        if item:
+            values.append(item)
+    return values
+
+
+def _age_range_q(age_range: str) -> Optional[Q]:
     if age_range == "under_1":
-        return queryset.filter(pet_age__years=0)
+        return Q(pet_age__years=0)
     if age_range == "1_2":
-        return queryset.filter(pet_age__years=1)
+        return Q(pet_age__years=1)
     if age_range == "2_3":
-        return queryset.filter(pet_age__years=2)
+        return Q(pet_age__years=2)
     if age_range == "3_5":
-        return queryset.filter(pet_age__years__in=[3, 4])
+        return Q(pet_age__years__in=[3, 4])
     if age_range == "5_7":
-        return queryset.filter(pet_age__years__in=[5, 6])
-    if age_range in {"7_plus", "7_over", "over_7", "higher_than_7"}:
-        return queryset.filter(pet_age__years__gte=7)
+        return Q(pet_age__years__in=[5, 6])
+    if age_range in {"over_7"}:
+        return Q(pet_age__years__gte=7)
+    return None
+
+
+def _filter_age_ranges(queryset, age_ranges: List[str]):
+    combined_q = Q()
+    has_ranges = False
+    for age_range in age_ranges:
+        range_q = _age_range_q(age_range)
+        if range_q is not None:
+            combined_q |= range_q
+            has_ranges = True
+    if has_ranges:
+        return queryset.filter(combined_q)
     return queryset
 
 
 def _apply_common_filters(queryset, params):
-    pet_type = params.get("pet_type")
-    pet_sex = params.get("pet_sex")
-    city = params.get("city")
-    age_range = params.get("pet_age_range")
+    pet_types = _split_list_param(params, "pet_type")
+    pet_sexes = _split_list_param(params, "pet_sex")
+    cities = _split_list_param(params, "city")
+    age_ranges = _split_list_param(params, "pet_age_range")
 
-    if pet_type:
-        queryset = queryset.filter(pet_type=pet_type)
-    if pet_sex:
-        queryset = queryset.filter(pet_sex=pet_sex)
-    if city and city.lower() != "all":
-        queryset = queryset.filter(location__city__iexact=city)
-    if age_range:
-        queryset = _filter_age_range(queryset, age_range)
+    if pet_types:
+        queryset = queryset.filter(pet_type__in=pet_types)
+    if pet_sexes:
+        queryset = queryset.filter(pet_sex__in=pet_sexes)
+    if cities:
+        if not any(city.lower() == "all" for city in cities):
+            city_q = Q()
+            for city in cities:
+                city_q |= Q(location__city__iexact=city)
+            queryset = queryset.filter(city_q)
+    if age_ranges:
+        queryset = _filter_age_ranges(queryset, age_ranges)
     return queryset
 
 
 def _apply_surrender_filters(queryset, params):
-    steriliz = _parse_bool_param(params.get("steriliz"))
-    vaccination = _parse_bool_param(params.get("vaccination"))
-    birth_certificate = _parse_bool_param(params.get("has_birth_certificate"))
+    steriliz_values = _parse_bool_list(_split_list_param(params, "steriliz"))
+    vaccination_values = _parse_bool_list(_split_list_param(params, "vaccination"))
+    birth_certificate_values = _parse_bool_list(_split_list_param(params, "has_birth_certificate"))
 
-    if steriliz is not None:
-        queryset = queryset.filter(steriliz=steriliz)
-    if vaccination is not None:
-        queryset = queryset.filter(vaccination=vaccination)
-    if birth_certificate is not None:
-        queryset = queryset.filter(has_birth_certificate=birth_certificate)
+    if steriliz_values == {True}:
+        queryset = queryset.filter(steriliz=True)
+    elif steriliz_values == {False}:
+        queryset = queryset.filter(steriliz=False)
+    if vaccination_values == {True}:
+        queryset = queryset.filter(vaccination=True)
+    elif vaccination_values == {False}:
+        queryset = queryset.filter(vaccination=False)
+    if birth_certificate_values == {True}:
+        queryset = queryset.filter(has_birth_certificate=True)
+    elif birth_certificate_values == {False}:
+        queryset = queryset.filter(has_birth_certificate=False)
     return queryset
 
 
