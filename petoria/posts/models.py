@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from locations.models import Location
 from users.models import User
@@ -30,6 +31,37 @@ class PostImage(models.Model):
     post = GenericForeignKey("content_type", "object_id")
     image = models.ImageField(upload_to="posts/")
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PetAge(models.Model):
+    years = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        help_text=_("Age of the pet in years.")
+    )
+
+    months = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MaxValueValidator(11)],
+        help_text=_("Additional months of age (0-11).")
+    )
+
+    def clean(self):
+        if self.years is None and self.months is None:
+            raise ValidationError("Provide years or months for pet age.")
+
+    @property
+    def display(self):
+        parts = []
+        if self.years is not None:
+            parts.append(f"{self.years} سال")
+        if self.months is not None:
+            parts.append(f"{self.months} ماه")
+        return " و ".join(parts)
+
+    def __str__(self):
+        return self.display or "unknown"
 
 
 
@@ -97,10 +129,12 @@ class BasePost(models.Model):
         help_text=_("Pet's name (optional).")
     )
 
-    pet_age = models.CharField(
-        max_length=100,
+    pet_age = models.OneToOneField(
+        PetAge,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
+        related_name="+",
         help_text=_("Age of the pet.")
     )
 

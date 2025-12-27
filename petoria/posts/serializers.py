@@ -4,7 +4,7 @@ from locations.serializers import LocationSerializer
 from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
 
-from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage
+from .models import LostPost, FoundPost, SurrenderCustodyPet, PostImage, PetAge
 
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -15,9 +15,23 @@ class PostImageSerializer(serializers.ModelSerializer):
         fields = ["id", "image"]
 
 
+class PetAgeSerializer(serializers.ModelSerializer):
+    display = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PetAge
+        fields = ["years", "months", "display"]
+
+    def validate(self, data):
+        if data.get("years") is None and data.get("months") is None:
+            raise serializers.ValidationError("Provide years or months for pet age.")
+        return data
+
+
 class BasePostSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True)
     location = LocationSerializer(required=False)
+    pet_age = PetAgeSerializer(required=False, allow_null=True)
     image_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
@@ -27,7 +41,7 @@ class BasePostSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = None  # To be set in child serializers
+        model = None
         fields = [
             "id", "title", "description",
             "pet_type", "pet_sex", "pet_name", "pet_age", "breed", "Specific_symptoms",
@@ -141,8 +155,23 @@ class BasePostSerializer(serializers.ModelSerializer):
         # Create a new location
         return Location.objects.create(**location_data)
 
+    def _handle_pet_age(self, instance, pet_age_data):
+        if pet_age_data is serializers.empty:
+            return instance.pet_age if instance else None
+        if pet_age_data is None:
+            if instance and instance.pet_age:
+                instance.pet_age.delete()
+            return None
+        if instance and instance.pet_age:
+            for attr, value in pet_age_data.items():
+                setattr(instance.pet_age, attr, value)
+            instance.pet_age.save()
+            return instance.pet_age
+        return PetAge.objects.create(**pet_age_data)
+
     def create(self, validated_data):
         location_data = validated_data.pop("location", None)
+        pet_age_data = validated_data.pop("pet_age", serializers.empty)
         image_ids = validated_data.pop("image_ids", [])
 
         # Attach request user if available; otherwise expect client to provide
@@ -151,7 +180,12 @@ class BasePostSerializer(serializers.ModelSerializer):
             validated_data.setdefault("user", request.user)
 
         location = self._handle_location(instance=None, location_data=location_data)
-        post = self.Meta.model.objects.create(location=location, **validated_data)
+        pet_age = self._handle_pet_age(instance=None, pet_age_data=pet_age_data)
+        post = self.Meta.model.objects.create(
+            location=location,
+            pet_age=pet_age,
+            **validated_data
+        )
         user = validated_data.get("user") or (request.user if request else None)
         if user:
             self._bind_images(post, image_ids, user)
@@ -159,9 +193,12 @@ class BasePostSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         location_data = validated_data.pop("location", None)
+        pet_age_data = validated_data.pop("pet_age", serializers.empty)
         image_ids = validated_data.pop("image_ids", [])
         if location_data is not None:
             instance.location = self._handle_location(instance, location_data)
+        if pet_age_data is not serializers.empty:
+            instance.pet_age = self._handle_pet_age(instance, pet_age_data)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

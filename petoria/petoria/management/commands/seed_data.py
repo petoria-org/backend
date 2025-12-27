@@ -7,7 +7,7 @@ from django.utils import timezone
 from users.models import User
 from locations.models import Location
 from chat.models import Chat, ChatParticipant, Message
-from posts.models import FoundPost, LostPost, SurrenderCustodyPet
+from posts.models import FoundPost, LostPost, SurrenderCustodyPet, PetAge
 
 # Etc.
 from petoria.settings import LOCAL_APPS
@@ -125,6 +125,10 @@ class Command(BaseCommand):
             unique_loc = next(self.generate_locations(1, False))
             pet_type = random.choice([PetType.CAT, PetType.DOG])
             pet_gender = random.choice(["male", "female"])
+            lost_age = PetAge.objects.create(
+                years=random.randint(0, 12),
+                months=random.randint(0, 11),
+            )
             LostPost.objects.create(
                 user=random.choice(User.objects.all()),
                 location=unique_loc,
@@ -132,7 +136,7 @@ class Command(BaseCommand):
                 description=self._faker.bs(),
                 pet_type=pet_type,
                 pet_name="Milo",
-                pet_age=random.randint(2, 12),
+                pet_age=lost_age,
                 pet_sex=pet_gender,
                 breed="British Shorthair",
                 Specific_symptoms="Limping" + self._faker.bs(),
@@ -146,6 +150,10 @@ class Command(BaseCommand):
             )
 
             unique_loc = next(self.generate_locations(1, False))
+            found_age = PetAge.objects.create(
+                years=random.randint(0, 15),
+                months=random.randint(0, 11),
+            )
             FoundPost.objects.create(
                 user=random.choice(User.objects.all()),
                 location=unique_loc,
@@ -154,7 +162,7 @@ class Command(BaseCommand):
                 pet_type=pet_type,
                 pet_sex=pet_gender,
                 pet_name="Unknown",
-                pet_age=random.randint(2, 15),
+                pet_age=found_age,
                 breed=self._faker.words(3),
                 Specific_symptoms="Wearing a red collar" + self._faker.bs(),
                 contact_phone=random.choice([True, False]),
@@ -166,6 +174,10 @@ class Command(BaseCommand):
             )
 
             unique_loc = next(self.generate_locations(1, False))
+            custody_age = PetAge.objects.create(
+                years=random.randint(0, 12),
+                months=random.randint(0, 11),
+            )
             SurrenderCustodyPet.objects.create(
                 title=f"Adoption Post #{random.randint(1,len(User.objects.all()))}",
                 description=self._faker.bs(),
@@ -174,6 +186,7 @@ class Command(BaseCommand):
                 pet_type=pet_type,
                 pet_sex=pet_gender,
                 pet_name=f"{str(pet_type).capitalize()}{random.randint(1,len(User.objects.all()))}",
+                pet_age=custody_age,
                 contact_phone=random.choice([True, False]),
             )
 

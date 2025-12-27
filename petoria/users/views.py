@@ -13,11 +13,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from .models import EmailVerification
 from .models import User
-from .serializers import LoginSerializer, SignupSerializer, VerifyOTPSerializer
-from .serializers import UserSerializer
+from .serializers import (
+    LoginSerializer,
+    SignupSerializer,
+    VerifyOTPSerializer,
+    SafeTokenRefreshSerializer,
+    UserSerializer,
+)
 
 
 
@@ -330,3 +336,7 @@ class UserProfilePictureView(APIView):
         user.profile_picture = default_name
         user.save(update_fields=["profile_picture"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SafeTokenRefreshView(TokenRefreshView):
+    serializer_class = SafeTokenRefreshSerializer
