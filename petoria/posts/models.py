@@ -107,7 +107,7 @@ class BasePost(models.Model):
     pet_type: models.CharField = models.CharField(
         max_length=20,
         choices=PetType.choices,
-        default=PetType.OTHER,
+        default=PetType.OTHERS,
         blank=False,
         null=False,
         help_text=_("Select the type of pet.")
