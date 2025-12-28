@@ -148,6 +148,50 @@ def _apply_search(queryset, params, include_diseases: bool = False):
     )
 
 
+def _get_sort_spec(params, default_sort: str = "-updated_at") -> tuple[str, bool]:
+    raw = (params.get("sort") or "").strip()
+    if not raw:
+        raw = default_sort
+    desc = raw.startswith("-")
+    field = raw[1:] if desc else raw
+    if field == "event":
+        field = "event_time"
+    if field not in {"created_at", "updated_at", "event_time"}:
+        field = "updated_at"
+    return field, desc
+
+
+def _apply_ordering(
+    queryset,
+    params,
+    event_field: Optional[str] = None,
+    fallback_field: str = "created_at",
+    default_sort: str = "-updated_at",
+):
+    sort_field, desc = _get_sort_spec(params, default_sort=default_sort)
+    if sort_field == "event_time":
+        order_field = event_field or fallback_field
+    else:
+        order_field = sort_field
+    if desc:
+        order_field = f"-{order_field}"
+    return queryset.order_by(order_field)
+
+
+def _get_sort_value(obj, sort_field: str):
+    if sort_field == "created_at":
+        return obj.created_at
+    if sort_field == "updated_at":
+        return obj.updated_at
+    if isinstance(obj, LostPost):
+        return obj.lost_time or obj.created_at
+    if isinstance(obj, FoundPost):
+        return obj.found_time or obj.created_at
+    if isinstance(obj, SurrenderCustodyPet):
+        return obj.updated_at
+    return obj.updated_at
+
+
 def _apply_common_filters(queryset, params):
     pet_types = _split_list_param(params, "pet_type")
     pet_sexes = _split_list_param(params, "pet_sex")
@@ -319,49 +363,57 @@ class ListAllPostsAPI(APIView):
         params = request.query_params
         lost = _apply_common_filters(
             _apply_search(
-                LostPost.objects.all().order_by("-updated_at"),
+                LostPost.objects.all(),
                 params,
             ),
             params,
         )
+        lost = _apply_ordering(lost, params, event_field="lost_time", default_sort="-updated_at")
         found = _apply_common_filters(
             _apply_search(
-                FoundPost.objects.all().order_by("-updated_at"),
+                FoundPost.objects.all(),
                 params,
             ),
             params,
         )
+        found = _apply_ordering(found, params, event_field="found_time", default_sort="-updated_at")
         surrender = _apply_common_filters(
             _apply_search(
-                SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+                SurrenderCustodyPet.objects.all(),
                 params,
                 include_diseases=True,
             ),
             params,
         )
         surrender = _apply_surrender_filters(surrender, params)
+        surrender = _apply_ordering(surrender, params, fallback_field="updated_at", default_sort="-updated_at")
 
+        sort_field, sort_desc = _get_sort_spec(params)
         combined = []
 
         for obj in lost:
             data = LostPostListSerializer(obj).data
             data["type"] = "lost"
-            combined.append(data)
+            combined.append((obj, data))
 
         for obj in found:
             data = FoundPostListSerializer(obj).data
             data["type"] = "found"
-            combined.append(data)
+            combined.append((obj, data))
 
         for obj in surrender:
             data = SurrenderPostListSerializer(obj).data
             data["type"] = "surrender"
-            combined.append(data)
+            combined.append((obj, data))
 
-        combined.sort(key=lambda x: x["updated_at"], reverse=True)
+        combined.sort(
+            key=lambda item: _get_sort_value(item[0], sort_field),
+            reverse=sort_desc,
+        )
+        combined_data = [data for _, data in combined]
 
         paginator = PostPagination()
-        page = paginator.paginate_queryset(combined, request)
+        page = paginator.paginate_queryset(combined_data, request)
         return paginator.get_paginated_response(page)
 
 
@@ -374,11 +426,12 @@ class ListCreateLostPostAPI(APIView):
     def get(self, request):
         posts = _apply_common_filters(
             _apply_search(
-                LostPost.objects.all().order_by("-created_at"),
+                LostPost.objects.all(),
                 request.query_params,
             ),
             request.query_params,
         )
+        posts = _apply_ordering(posts, request.query_params, event_field="lost_time", default_sort="-created_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = LostPostListSerializer(page, many=True)
@@ -438,11 +491,12 @@ class ListCreateFoundPostAPI(APIView):
     def get(self, request):
         posts = _apply_common_filters(
             _apply_search(
-                FoundPost.objects.all().order_by("-updated_at"),
+                FoundPost.objects.all(),
                 request.query_params,
             ),
             request.query_params,
         )
+        posts = _apply_ordering(posts, request.query_params, event_field="found_time", default_sort="-updated_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = FoundPostListSerializer(page, many=True)
@@ -502,13 +556,14 @@ class ListCreateCustodyAPI(APIView):
     def get(self, request):
         posts = _apply_common_filters(
             _apply_search(
-                SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+                SurrenderCustodyPet.objects.all(),
                 request.query_params,
                 include_diseases=True,
             ),
             request.query_params,
         )
         posts = _apply_surrender_filters(posts, request.query_params)
+        posts = _apply_ordering(posts, request.query_params, fallback_field="updated_at", default_sort="-updated_at")
         paginator = PostPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = SurrenderPostListSerializer(page, many=True)

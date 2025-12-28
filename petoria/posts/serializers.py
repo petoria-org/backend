@@ -39,6 +39,8 @@ class BasePostSerializer(serializers.ModelSerializer):
         allow_empty=True,
         help_text="IDs returned from /posts/images/upload/"
     )
+    user_id = serializers.SerializerMethodField(read_only=True)
+    email = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = None
@@ -46,13 +48,21 @@ class BasePostSerializer(serializers.ModelSerializer):
             "id", "title", "description",
             "pet_type", "pet_sex", "pet_name", "pet_age", "breed", "Specific_symptoms",
             "location",
-            "contact_phone", "contact_email",
+            "user_id", "email",
             "status",
             "images",
             "image_ids",
             "created_at", "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at", "images"]
+
+    def get_user_id(self, obj):
+        return obj.user.id
+    
+    def get_email(self, obj):
+        if obj.contact_email :
+            return obj.user.email
+        return None
 
     def validate(self, data):
         location_data = data.get("location")
