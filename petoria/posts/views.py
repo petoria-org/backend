@@ -1,6 +1,6 @@
 from typing import Any, List, Dict, Optional
 
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -75,6 +75,77 @@ def _filter_age_ranges(queryset, age_ranges: List[str]):
     if has_ranges:
         return queryset.filter(combined_q)
     return queryset
+
+
+MALE_TERMS = {"male", "مرد", "پسر", "نر"}
+FEMALE_TERMS = {"female", "زن", "دختر", "ماده"}
+
+
+def _apply_search(queryset, params, include_diseases: bool = False):
+    query = (params.get("q") or "").strip()
+    if not query:
+        return queryset
+
+    terms = [term for term in query.split() if term]
+    if not terms:
+        return queryset
+
+    fields = [
+        "title",
+        "description",
+        "pet_name",
+        "breed",
+        "Specific_symptoms",
+        "location__city",
+    ]
+    if include_diseases:
+        fields.append("diseases")
+
+    term_qs: List[Q] = []
+    for term in terms:
+        term_q = Q()
+        term_lower = term.lower()
+        for field in fields:
+            term_q |= Q(**{f"{field}__icontains": term})
+        if term_lower in MALE_TERMS:
+            term_q |= Q(pet_sex="male")
+        elif term_lower in FEMALE_TERMS:
+            term_q |= Q(pet_sex="female")
+        age_range_q = _age_range_q(term_lower)
+        if age_range_q is not None:
+            term_q |= age_range_q
+        if term.isdigit():
+            age_value = int(term)
+            term_q |= Q(pet_age__years=age_value) | Q(pet_age__months=age_value)
+        term_qs.append(term_q)
+
+    if not term_qs:
+        return queryset
+
+    if len(term_qs) == 1:
+        return queryset.filter(term_qs[0])
+
+    if len(term_qs) <= 2:
+        min_match = len(term_qs)
+    elif len(term_qs) <= 4:
+        min_match = 3
+    else:
+        min_match = 4
+
+    match_count = sum(
+        (
+            Case(
+                When(term_q, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+            for term_q in term_qs
+        ),
+        Value(0),
+    )
+    return queryset.annotate(_search_match_count=match_count).filter(
+        _search_match_count__gte=min_match
+    )
 
 
 def _apply_common_filters(queryset, params):
@@ -247,15 +318,25 @@ class ListAllPostsAPI(APIView):
     def get(self, request):
         params = request.query_params
         lost = _apply_common_filters(
-            LostPost.objects.all().order_by("-updated_at"),
+            _apply_search(
+                LostPost.objects.all().order_by("-updated_at"),
+                params,
+            ),
             params,
         )
         found = _apply_common_filters(
-            FoundPost.objects.all().order_by("-updated_at"),
+            _apply_search(
+                FoundPost.objects.all().order_by("-updated_at"),
+                params,
+            ),
             params,
         )
         surrender = _apply_common_filters(
-            SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+            _apply_search(
+                SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+                params,
+                include_diseases=True,
+            ),
             params,
         )
         surrender = _apply_surrender_filters(surrender, params)
@@ -292,7 +373,10 @@ class ListCreateLostPostAPI(APIView):
 
     def get(self, request):
         posts = _apply_common_filters(
-            LostPost.objects.all().order_by("-created_at"),
+            _apply_search(
+                LostPost.objects.all().order_by("-created_at"),
+                request.query_params,
+            ),
             request.query_params,
         )
         paginator = PostPagination()
@@ -353,7 +437,10 @@ class ListCreateFoundPostAPI(APIView):
 
     def get(self, request):
         posts = _apply_common_filters(
-            FoundPost.objects.all().order_by("-updated_at"),
+            _apply_search(
+                FoundPost.objects.all().order_by("-updated_at"),
+                request.query_params,
+            ),
             request.query_params,
         )
         paginator = PostPagination()
@@ -414,7 +501,11 @@ class ListCreateCustodyAPI(APIView):
 
     def get(self, request):
         posts = _apply_common_filters(
-            SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+            _apply_search(
+                SurrenderCustodyPet.objects.all().order_by("-updated_at"),
+                request.query_params,
+                include_diseases=True,
+            ),
             request.query_params,
         )
         posts = _apply_surrender_filters(posts, request.query_params)
