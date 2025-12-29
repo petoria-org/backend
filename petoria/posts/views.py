@@ -241,26 +241,30 @@ class UploadPostImageAPI(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        uploaded = request.FILES.get("image") or request.FILES.get("file")
+        uploaded = request.FILES.getlist("file")
         if not uploaded:
             return Response({"error": "No image provided. Use form-data key 'image' or 'file'."}, status=400)
 
-        content_type = (uploaded.content_type or "").lower()
-        size = uploaded.size
-        allowed_types = {"image/jpeg", "image/png", "image/webp"}
-        max_size = 10 * 1024 * 1024  # 10 MB
+        post_images = []
+        for file in uploaded:
+            content_type = (file.content_type or "").lower()
+            size = file.size
+            allowed_types = {"image/jpeg", "image/png", "image/webp"}
+            max_size = 10 * 1024 * 1024  # 10 MB
 
-        if content_type not in allowed_types:
-            return Response({"error": "Unsupported file type."}, status=400)
-        if size > max_size:
-            return Response({"error": "File too large.", "max_bytes": max_size}, status=400)
+            if content_type not in allowed_types:
+                return Response({"error": "Unsupported file type."}, status=400)
+            if size > max_size:
+                return Response({"error": "File too large.", "max_bytes": max_size}, status=400)
 
-        post_image = PostImage.objects.create(
-            uploaded_by=request.user,
-            image=uploaded,
-        )
-        serializer = PostImageSerializer(post_image)
-        return Response(serializer.data, status=201)
+            post_image = PostImage.objects.create(
+                uploaded_by=request.user,
+                image=file,
+            )
+            serializer = PostImageSerializer(post_image)
+            post_images.append(serializer.data)
+        
+        return Response(post_images, status=201)
 
 
 class DeletePostImageAPI(APIView):

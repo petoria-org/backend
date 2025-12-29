@@ -19,26 +19,30 @@ class UploadSuccessStoryImageAPI(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        uploaded = request.FILES.get("image") or request.FILES.get("file")
+        uploaded = request.FILES.getlist("file")
         if not uploaded:
             return Response({"error": "No image provided."}, status=400)
 
-        content_type = (uploaded.content_type or "").lower()
-        size = uploaded.size
-        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-        max_size = 10 * 1024 * 1024  # 10 MB
+        story_images = []
+        for file in uploaded:
+            content_type = (file.content_type or "").lower()
+            size = file.size
+            allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+            max_size = 10 * 1024 * 1024  # 10 MB
 
-        if content_type not in allowed_types:
-            return Response({"error": "Unsupported file type."}, status=400)
-        if size > max_size:
-            return Response({"error": "File too large.", "max_bytes": max_size}, status=400)
+            if content_type not in allowed_types:
+                return Response({"error": "Unsupported file type."}, status=400)
+            if size > max_size:
+                return Response({"error": "File too large.", "max_bytes": max_size}, status=400)
 
-        story_image = SuccessStoryImage.objects.create(
-            uploaded_by=request.user,
-            image=uploaded,
-        )
-        serializer = SuccessStoryImageSerializer(story_image)
-        return Response(serializer.data, status=201)
+            story_image = SuccessStoryImage.objects.create(
+                uploaded_by=request.user,
+                image=file,
+            )
+            serializer = SuccessStoryImageSerializer(story_image)
+            story_images.append(serializer.data)
+        
+        return Response(story_images, status=201)
 
 
 class DeleteSuccessStoryImageAPI(APIView):

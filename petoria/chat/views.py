@@ -128,39 +128,42 @@ class AttachmentUploadAPI(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, *args, **kwargs):
-        uploaded = request.FILES.get('file')
+        uploaded = request.FILES.getlist('file')
         if not uploaded:
             return Response({'error': 'missing_file'}, status=status.HTTP_400_BAD_REQUEST)
 
-        content_type = (uploaded.content_type or '').lower()
-        size = uploaded.size
+        attachments_data = []
+        for file in uploaded:
+            content_type = (file.content_type or '').lower()
+            size = file.size
 
-        if size > MAX_ATTACHMENT_SIZE:
-            return Response(
-                {'error': 'file_too_large', 'max_bytes': MAX_ATTACHMENT_SIZE},
-                status=status.HTTP_400_BAD_REQUEST
+            if size > MAX_ATTACHMENT_SIZE:
+                return Response(
+                    {'error': 'file_too_large', 'max_bytes': MAX_ATTACHMENT_SIZE},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if content_type in ALLOWED_IMAGE_TYPES:
+                attach_type = AttachmentType.IMAGE
+            elif content_type in ALLOWED_VIDEO_TYPES:
+                attach_type = AttachmentType.VIDEO
+            else:
+                return Response(
+                    {'error': 'unsupported_file_type'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            attachment = Attachment.objects.create(
+                uploaded_by=request.user,
+                file=file,
+                content_type=content_type,
+                size=size,
+                type=attach_type,
             )
+            serializer = AttachmentSerializer(attachment, context={'request': request})
+            attachments_data.append(serializer.data)
 
-        if content_type in ALLOWED_IMAGE_TYPES:
-            attach_type = AttachmentType.IMAGE
-        elif content_type in ALLOWED_VIDEO_TYPES:
-            attach_type = AttachmentType.VIDEO
-        else:
-            return Response(
-                {'error': 'unsupported_file_type'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        attachment = Attachment.objects.create(
-            uploaded_by=request.user,
-            file=uploaded,
-            content_type=content_type,
-            size=size,
-            type=attach_type,
-        )
-
-        serializer = AttachmentSerializer(attachment, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(attachments_data, status=status.HTTP_201_CREATED)
 
 
 # ------------------------------------------------------------
