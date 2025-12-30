@@ -3,6 +3,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.utils import timezone
 
 from posts.pagination import PostPagination
 
@@ -61,29 +62,61 @@ class DeleteSuccessStoryImageAPI(APIView):
         return Response(status=204)
 
 
-class ListCreateSuccessStoryAPI(ListCreateAPIView):
+class ListCreateSuccessStoryAPI(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
-    serializer_class = SuccessStoryListSerializer
-    pagination_class = PostPagination
 
-    def get_queryset(self):
-        return SuccessStory.objects.all().order_by("-updated_at")
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def get(self, request):
+        stories = SuccessStory.objects.all().order_by("-updated_at")
+        paginator = PostPagination()
+        page = paginator.paginate_queryset(stories, request)
+        serializer = SuccessStoryListSerializer(stories, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    
+    def post(self, request):
+        serializer = SuccessStorySerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
 class RetrieveUpdateDeleteSuccessStoryAPI(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = SuccessStory.objects.all()
-    serializer_class = SuccessStorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_object(self):
-        obj = super().get_object()
-        if obj.user != self.request.user:
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("You do not have permission to modify this story.")
-        return obj
+    def get_object(self, pk):
+        return SuccessStory.objects.filter(pk=pk).first()
+
+    def get(self, request, pk):
+        story = self.get_object(pk)
+        if not story:
+            return Response({"error": "Not Found"}, 404)
+        return Response(SuccessStorySerializer(story).data)
+
+    def put(self, request, pk):
+        story = self.get_object(pk)
+        if not story:
+            return Response({"error": "Not Found"}, 404)
+        if request.user != story.user:
+            return Response({"error": "Not permitted to edit this story"}, status=403)
+
+        updated_data = request.data.copy()
+        updated_data["updated_at"] = timezone.now().isoformat()
+        serializer = SuccessStorySerializer(
+            story,data=updated_data, partial=True, context={"request": request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, 400)
+
+    def delete(self, request, pk):
+        story = self.get_object(pk)
+        if not story:
+            return Response({"error": "Not Found"}, 404)
+        if request.user != story.user:
+            return Response({"error": "Not permitted to delete this story"}, status=403)
+        story.delete()
+        return Response(status=204)
 
 
 class ListUserSuccessStoriesAPI(ListAPIView):

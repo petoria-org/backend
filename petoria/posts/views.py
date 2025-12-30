@@ -481,7 +481,7 @@ class RetrieveUpdateDeleteLostPostAPI(APIView):
         if not post:
             return Response({"error": "Not Found"}, 404)
         if request.user != post.user:
-            return Response({"error": "Not permitted to edit this post"}, status=403)
+            return Response({"error": "Not permitted to delete this post"}, status=403)
         post.delete()
         return Response(status=204)
 
