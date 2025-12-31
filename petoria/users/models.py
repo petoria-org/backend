@@ -61,7 +61,6 @@ class User(AbstractUser):
         upload_to=user_avatar_path,
         null=True,
         blank=True,
-        default='profile_pics/default_avatar.png',
         help_text="User profile photo"
     )
 

@@ -7,7 +7,7 @@ class PetType(models.TextChoices):
     CAT: str = 'cat', _('Cat')
     BIRD: str = 'bird', _('Bird')
     RABBIT: str = 'rabbit', _('Rabbit')
-    HAMESTER: str = 'hamester', _('Hamester')
+    HAMSTER: str = 'hamster', _('Hamster')
     OTHERS: str = 'others', _('Others')
 
 class Gender(models.TextChoices):

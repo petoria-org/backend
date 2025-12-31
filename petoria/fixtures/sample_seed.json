@@ -313,7 +313,6 @@
       "is_active": true,
       "date_joined": "2024-01-01T00:00:00Z",
       "phone": "+989121111111",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "عاشق حیوانات خیابانی",
       "google_id": null,
       "email_notifications": true,
@@ -335,7 +334,6 @@
       "is_active": true,
       "date_joined": "2024-01-05T00:00:00Z",
       "phone": "+989121111112",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "حامی حیوانات بی‌سرپرست",
       "google_id": null,
       "email_notifications": true,
@@ -357,7 +355,6 @@
       "is_active": true,
       "date_joined": "2024-01-10T00:00:00Z",
       "phone": "+989121111113",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "دامپزشک داوطلب",
       "google_id": null,
       "email_notifications": true,
@@ -379,7 +376,6 @@
       "is_active": true,
       "date_joined": "2024-01-12T00:00:00Z",
       "phone": "+989121111114",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "حامی حقوق حیوانات",
       "google_id": null,
       "email_notifications": true,
@@ -401,7 +397,6 @@
       "is_active": true,
       "date_joined": "2024-01-15T00:00:00Z",
       "phone": "+989121111115",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "داوطلب سرپرستی موقت",
       "google_id": null,
       "email_notifications": true,
@@ -423,7 +418,6 @@
       "is_active": true,
       "date_joined": "2024-01-18T00:00:00Z",
       "phone": "+989121111116",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "علاقه‌مند به حمایت از حیوانات گمشده",
       "google_id": null,
       "email_notifications": true,
@@ -445,7 +439,6 @@
       "is_active": true,
       "date_joined": "2024-01-20T00:00:00Z",
       "phone": "+989121111117",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "مربی سگ و داوطلب امداد",
       "google_id": null,
       "email_notifications": true,
@@ -467,7 +460,6 @@
       "is_active": true,
       "date_joined": "2024-01-22T00:00:00Z",
       "phone": "+989121111118",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "داوطلب مراقبت از حیوانات زخمی",
       "google_id": null,
       "email_notifications": true,
@@ -489,7 +481,6 @@
       "is_active": true,
       "date_joined": "2024-01-25T00:00:00Z",
       "phone": "+989121111119",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "حامی سگ‌های گمشده",
       "google_id": null,
       "email_notifications": true,
@@ -511,7 +502,6 @@
       "is_active": true,
       "date_joined": "2024-01-28T00:00:00Z",
       "phone": "+989121111120",
-      "profile_picture": "profile_pics/default_avatar.png",
       "bio": "حامی گربه‌های خیابانی",
       "google_id": null,
       "email_notifications": true,
@@ -1046,7 +1036,7 @@
       "title": "همستر گمشده در کرمانشاه",
       "description": "همستر قهوه‌ای کوچک در نزدیکی طاق بستان از دست صاحبش خارج شده است.",
       "user": 9,
-      "pet_type": "hamester",
+      "pet_type": "hamster",
       "pet_sex": "male",
       "pet_name": "پوفی",
       "pet_age": 9,
@@ -1510,426 +1500,6 @@
     }
   },
   {
-    "model": "posts.postimage",
-    "pk": 100,
-    "fields": {
-      "uploaded_by": 1,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 1,
-      "image": "posts/lost_1.jpg",
-      "created_at": "2024-05-10T13:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 101,
-    "fields": {
-      "uploaded_by": 2,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 2,
-      "image": "posts/lost_2.jpg",
-      "created_at": "2024-05-12T10:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 102,
-    "fields": {
-      "uploaded_by": 3,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 3,
-      "image": "posts/lost_3.jpg",
-      "created_at": "2024-05-15T17:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 103,
-    "fields": {
-      "uploaded_by": 4,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 4,
-      "image": "posts/lost_4.jpg",
-      "created_at": "2024-05-18T19:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 104,
-    "fields": {
-      "uploaded_by": 5,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 5,
-      "image": "posts/lost_5.jpg",
-      "created_at": "2024-05-20T15:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 105,
-    "fields": {
-      "uploaded_by": 6,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 6,
-      "image": "posts/lost_6.jpg",
-      "created_at": "2024-05-22T12:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 106,
-    "fields": {
-      "uploaded_by": 7,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 7,
-      "image": "posts/lost_7.jpg",
-      "created_at": "2024-05-24T09:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 107,
-    "fields": {
-      "uploaded_by": 8,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 8,
-      "image": "posts/lost_8.jpg",
-      "created_at": "2024-05-25T18:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 108,
-    "fields": {
-      "uploaded_by": 9,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 9,
-      "image": "posts/lost_9.jpg",
-      "created_at": "2024-05-26T11:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 109,
-    "fields": {
-      "uploaded_by": 10,
-      "content_type": [
-        "posts",
-        "lostpost"
-      ],
-      "object_id": 10,
-      "image": "posts/lost_10.jpg",
-      "created_at": "2024-05-27T20:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 110,
-    "fields": {
-      "uploaded_by": 1,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 1,
-      "image": "posts/found_11.jpg",
-      "created_at": "2024-06-01T09:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 111,
-    "fields": {
-      "uploaded_by": 2,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 2,
-      "image": "posts/found_12.jpg",
-      "created_at": "2024-06-02T11:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 112,
-    "fields": {
-      "uploaded_by": 3,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 3,
-      "image": "posts/found_13.jpg",
-      "created_at": "2024-06-03T13:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 113,
-    "fields": {
-      "uploaded_by": 4,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 4,
-      "image": "posts/found_14.jpg",
-      "created_at": "2024-06-04T10:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 114,
-    "fields": {
-      "uploaded_by": 5,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 5,
-      "image": "posts/found_15.jpg",
-      "created_at": "2024-06-05T18:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 115,
-    "fields": {
-      "uploaded_by": 6,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 6,
-      "image": "posts/found_16.jpg",
-      "created_at": "2024-06-06T09:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 116,
-    "fields": {
-      "uploaded_by": 7,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 7,
-      "image": "posts/found_17.jpg",
-      "created_at": "2024-06-07T19:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 117,
-    "fields": {
-      "uploaded_by": 8,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 8,
-      "image": "posts/found_18.jpg",
-      "created_at": "2024-06-08T16:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 118,
-    "fields": {
-      "uploaded_by": 9,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 9,
-      "image": "posts/found_19.jpg",
-      "created_at": "2024-06-09T08:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 119,
-    "fields": {
-      "uploaded_by": 10,
-      "content_type": [
-        "posts",
-        "foundpost"
-      ],
-      "object_id": 10,
-      "image": "posts/found_20.jpg",
-      "created_at": "2024-06-10T12:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 120,
-    "fields": {
-      "uploaded_by": 1,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 1,
-      "image": "posts/surrender_21.jpg",
-      "created_at": "2024-06-11T09:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 121,
-    "fields": {
-      "uploaded_by": 2,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 2,
-      "image": "posts/surrender_22.jpg",
-      "created_at": "2024-06-12T10:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 122,
-    "fields": {
-      "uploaded_by": 3,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 3,
-      "image": "posts/surrender_23.jpg",
-      "created_at": "2024-06-13T11:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 123,
-    "fields": {
-      "uploaded_by": 4,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 4,
-      "image": "posts/surrender_24.jpg",
-      "created_at": "2024-06-14T12:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 124,
-    "fields": {
-      "uploaded_by": 5,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 5,
-      "image": "posts/surrender_25.jpg",
-      "created_at": "2024-06-15T13:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 125,
-    "fields": {
-      "uploaded_by": 6,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 6,
-      "image": "posts/surrender_26.jpg",
-      "created_at": "2024-06-16T14:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 126,
-    "fields": {
-      "uploaded_by": 7,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 7,
-      "image": "posts/surrender_27.jpg",
-      "created_at": "2024-06-17T15:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 127,
-    "fields": {
-      "uploaded_by": 8,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 8,
-      "image": "posts/surrender_28.jpg",
-      "created_at": "2024-06-18T16:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 128,
-    "fields": {
-      "uploaded_by": 9,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 9,
-      "image": "posts/surrender_29.jpg",
-      "created_at": "2024-06-19T17:00:00Z"
-    }
-  },
-  {
-    "model": "posts.postimage",
-    "pk": 129,
-    "fields": {
-      "uploaded_by": 10,
-      "content_type": [
-        "posts",
-        "surrendercustodypet"
-      ],
-      "object_id": 10,
-      "image": "posts/surrender_30.jpg",
-      "created_at": "2024-06-20T18:00:00Z"
-    }
-  },
-  {
     "model": "success_story.successstory",
     "pk": 1,
     "fields": {
@@ -1993,126 +1563,6 @@
       "story": "باران به خانه جدید رفت و حالا در امنیت کامل زندگی می‌کند.",
       "story_type": "surrender",
       "created_at": "2024-06-26T15:00:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 1,
-    "fields": {
-      "uploaded_by": 1,
-      "success_story": 1,
-      "image": "success_stories/story_1_1.jpg",
-      "created_at": "2024-06-21T10:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 2,
-    "fields": {
-      "uploaded_by": 1,
-      "success_story": 1,
-      "image": "success_stories/story_1_2.jpg",
-      "created_at": "2024-06-21T10:06:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 3,
-    "fields": {
-      "uploaded_by": 2,
-      "success_story": 2,
-      "image": "success_stories/story_2_1.jpg",
-      "created_at": "2024-06-22T11:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 4,
-    "fields": {
-      "uploaded_by": 2,
-      "success_story": 2,
-      "image": "success_stories/story_2_2.jpg",
-      "created_at": "2024-06-22T11:06:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 5,
-    "fields": {
-      "uploaded_by": 3,
-      "success_story": 3,
-      "image": "success_stories/story_3_1.jpg",
-      "created_at": "2024-06-23T12:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 6,
-    "fields": {
-      "uploaded_by": 3,
-      "success_story": 3,
-      "image": "success_stories/story_3_2.jpg",
-      "created_at": "2024-06-23T12:06:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 7,
-    "fields": {
-      "uploaded_by": 4,
-      "success_story": 4,
-      "image": "success_stories/story_4_1.jpg",
-      "created_at": "2024-06-24T13:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 8,
-    "fields": {
-      "uploaded_by": 4,
-      "success_story": 4,
-      "image": "success_stories/story_4_2.jpg",
-      "created_at": "2024-06-24T13:06:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 9,
-    "fields": {
-      "uploaded_by": 5,
-      "success_story": 5,
-      "image": "success_stories/story_5_1.jpg",
-      "created_at": "2024-06-25T14:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 10,
-    "fields": {
-      "uploaded_by": 5,
-      "success_story": 5,
-      "image": "success_stories/story_5_2.jpg",
-      "created_at": "2024-06-25T14:06:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 11,
-    "fields": {
-      "uploaded_by": 6,
-      "success_story": 6,
-      "image": "success_stories/story_6_1.jpg",
-      "created_at": "2024-06-26T15:05:00Z"
-    }
-  },
-  {
-    "model": "success_story.successstoryimage",
-    "pk": 12,
-    "fields": {
-      "uploaded_by": 6,
-      "success_story": 6,
-      "image": "success_stories/story_6_2.jpg",
-      "created_at": "2024-06-26T15:06:00Z"
     }
   }
 ]

@@ -233,7 +233,7 @@ class LostPostSerializer(BasePostSerializer):
         fields = BasePostSerializer.Meta.fields + ["lost_time", "post_type"]
     
     def get_post_type(self, obj):
-        return " lost"
+        return "lost"
 
 
 class FoundPostSerializer(BasePostSerializer):
