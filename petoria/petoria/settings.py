@@ -208,13 +208,27 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
 }
 
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "youremail@gmail.com"
-# EMAIL_HOST_PASSWORD = "12345"
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+_email_use_console_env = os.getenv("EMAIL_USE_CONSOLE")
+if _email_use_console_env is None:
+    EMAIL_USE_CONSOLE = DEBUG
+else:
+    EMAIL_USE_CONSOLE = _email_use_console_env.lower() == "true"
+
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"
+    if EMAIL_USE_CONSOLE
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    EMAIL_HOST_USER or "noreply@yourdomain.com",
+)
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True

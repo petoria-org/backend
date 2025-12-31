@@ -1,6 +1,7 @@
 import random
 from typing import Optional
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -117,14 +118,14 @@ class SignupView(APIView):
                 user=user,
                 email=user.email,
                 code=code,
-                expires_at=timezone.now() + timezone.timedelta(minutes=5)
+                expires_at=timezone.now() + timezone.timedelta(minutes=2)
             )
 
             try:
                 send_mail(
                     subject="OTP Code",
                     message=f"OTP code is: {code}",
-                    from_email="noreply@yourdomain.com",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
@@ -169,7 +170,7 @@ class RequestOTPView(APIView):
             send_mail(
                 subject="Your OTP Code",
                 message=f"Your OTP code is: {code}",
-                from_email="noreply@yourdomain.com",
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
                 fail_silently=False
             )
