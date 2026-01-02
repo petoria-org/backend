@@ -177,7 +177,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         for i, uid in enumerate(participants):
 
-            other = self.get_user(participants[1-i])
+            other = await self.get_user(participants[1-i])
             unread = await self.get_unread(uid, chat_id)
             chat_preview["unread_count"] = unread
             chat_preview["other_id"] = other.id
