@@ -11,6 +11,7 @@ from .views import (
     UserProfilePictureView,
     GoogleAuthView,
     SafeTokenRefreshView,
+    UserDetailView,
 )
 
 
@@ -27,6 +28,7 @@ urlpatterns = [
     path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 
     path("profile/", UserProfileView.as_view(), name="user-profile"),
+    path("<int:id>/", UserDetailView.as_view(), name="user_by_id"),
     path("profile/picture/", UserProfilePictureView.as_view(), name="user-profile-picture"),
     path("login/google/", GoogleAuthView.as_view(), name="google-auth"),
 

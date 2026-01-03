@@ -341,3 +341,18 @@ class UserProfilePictureView(APIView):
 
 class SafeTokenRefreshView(TokenRefreshView):
     serializer_class = SafeTokenRefreshSerializer
+
+class UserDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, id):
+        try:
+            user = User.objects.filter(id=id).first()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found.", "error_code": "USER_NOT_FOUND"},
+                status=status.HTTP_404_NOT_FOUND
+            )
