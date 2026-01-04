@@ -1,1 +1,8 @@
-{ "apt": ["gdal-bin", "libgdal-dev"] }
+{
+  "apt": [
+    "gdal-bin",
+    "libgdal-dev",
+    "build-essential",
+    "ca-certificates"
+  ]
+}
