@@ -1,1 +1,1 @@
-{ "apt": ["gdal-bin", "GDAL", "libgdal-dev"] }
+{ "apt": ["gdal-bin", "libgdal-dev"] }
