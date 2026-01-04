@@ -4,6 +4,6 @@
   "build": {
     "location": "iran"
   },
-  "apt": { "packages": ["gdal-bin"] },
+  "apt": { "packages": ["gdal-bin", "GDAL", "libgdal-dev"] },
   "disks": []
 }
