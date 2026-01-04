@@ -2,10 +2,10 @@
 from typing import TypedDict, cast
 
 import requests
-from django.contrib.gis.db import models
-from django.contrib.gis.geos import Point
+from django.db import models
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class AddressDict(TypedDict, total=False):
@@ -23,7 +23,16 @@ class Location(models.Model):
     district: models.CharField = models.CharField(max_length=150, blank=True, null=True)
 
     # latitude = y, longitude = x
-    point: models.PointField = models.PointField(blank=True, null=True, geography=True)
+    latitude: models.FloatField = models.FloatField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],
+    )
+    longitude: models.FloatField = models.FloatField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)],
+    )
 
     def reverse_geocode(self, lat, lon):
         """
@@ -44,7 +53,7 @@ class Location(models.Model):
             f"?lat={lat}&lon={lon}&format=json&zoom=10&addressdetails=1"
         )
 
-        headers: dict[str, str] = {"User-Agent": "MahshidPetApp/1.0"}  # HTTP headers creact
+        headers: dict[str, str] = {"User-Agent": "MahshidPetApp/1.0"}
 
         res: requests.Response = requests.get(url, headers=headers, timeout=5)
 
@@ -59,7 +68,7 @@ class Location(models.Model):
 
     def forward_geocode(self, query):
         """
-        Description: Convert text → point using Nominatim
+        Description: Convert text → coordinates using Nominatim
         @:return return1: latitude
         @:return return2: longitude
         """
@@ -87,10 +96,14 @@ class Location(models.Model):
 
     def clean(self):
         """Validate + auto-fill fields intelligently"""
+        has_lat = self.latitude is not None
+        has_lon = self.longitude is not None
+        if has_lat ^ has_lon:
+            raise ValidationError("Both latitude and longitude must be provided together.")
 
-        if self.point and (not self.country or not self.city):
-            lat = self.point.y
-            lon = self.point.x
+        if has_lat and has_lon and (not self.country or not self.city):
+            lat = self.latitude
+            lon = self.longitude
             address = self.reverse_geocode(lat, lon)
 
             self.country = (
@@ -108,24 +121,15 @@ class Location(models.Model):
                     or self.district
             )
 
-        if not self.point and (self.city or self.country):
+        if not has_lat and not has_lon and (self.city or self.country):
             query = ", ".join([p for p in [self.city, self.country] if p])
             result = self.forward_geocode(query)
 
             if result:
-                lat = float(result["lat"])
-                lon = float(result["lon"])
-                self.point = Point(lon, lat)
-
-        # === 3) اگر هیچ اطلاعاتی نداد → خطا نده، چون همه پست‌ها اجباری نیست ===
-        # ولی Lost_post بعداً خودش چک می‌کند
-
-        if self.point and not isinstance(self.point, Point):
-            raise ValidationError("Point must be a valid GIS Point object")
+                self.latitude = float(result["lat"])
+                self.longitude = float(result["lon"])
 
     def __str__(self):
-        if self.point:
+        if self.latitude is not None and self.longitude is not None:
             return f"{self.city or ''}, {self.country or ''}".strip(" ,") or "Location"
         return self.city or self.country or "Unknown Location"
-
-# gcgmfy

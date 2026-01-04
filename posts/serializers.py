@@ -1,4 +1,3 @@
-from django.contrib.gis.geos import Point
 from locations.models import Location
 from locations.serializers import LocationSerializer
 from rest_framework import serializers
@@ -92,9 +91,17 @@ class BasePostSerializer(serializers.ModelSerializer):
         
         # If location is provided (not None or empty dict), validate its content
         if location_data:
-            if not (location_data.get("city") and location_data.get("country")):
+            lat = location_data.get("latitude")
+            lon = location_data.get("longitude")
+            has_coords = lat is not None and lon is not None
+            has_city_or_country = bool(location_data.get("city") or location_data.get("country"))
+            if (lat is None) ^ (lon is None):
                 raise serializers.ValidationError(
-                    {"location": "City or country must be provided when location is given."}
+                    {"location": "Both latitude and longitude must be provided together."}
+                )
+            if not (has_coords or has_city_or_country):
+                raise serializers.ValidationError(
+                    {"location": "Provide city/country or latitude/longitude when location is given."}
                 )
         return data
 
@@ -149,11 +156,6 @@ class BasePostSerializer(serializers.ModelSerializer):
         """
         if location_data is None:
             return instance.location if instance else None
-
-        lat = location_data.pop("latitude", None)
-        lon = location_data.pop("longitude", None)
-        if lat is not None and lon is not None:
-            location_data["point"] = Point(lon, lat)
 
         if instance and instance.location:
             # Update existing location

@@ -1,6 +1,5 @@
 # Django Tools
 from django.core.management.base import BaseCommand
-from django.contrib.gis.geos import Point
 from django.utils import timezone
 
 # Models
@@ -22,7 +21,7 @@ from posts.enums import PetType
 # -----------------------------------------
 
 
-def iran_random_point():
+def iran_random_coordinates():
     """Return a random lat/lng inside Iran's bounding box."""
     # Approx bounding box of Iran (not perfectly accurate but good enough)
     min_lat, max_lat = 25.0, 40.0
@@ -30,7 +29,7 @@ def iran_random_point():
 
     lat = random.uniform(min_lat, max_lat)
     lng = random.uniform(min_lng, max_lng)
-    return Point(lng, lat)  # GeoDjango uses (x=lng, y=lat)
+    return lat, lng
 
 
 def random_phone():
@@ -202,12 +201,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING(f"Generating {count} locations...")) if do_log else None
         try:
             for _ in range(count):
+                lat, lng = iran_random_coordinates()
                 yield Location.objects.create(
-                point=iran_random_point(),
-                district=f"Sample Address {iran_random_point()}",
-                city="Tehran",
-                country="Iran",
-            )
+                    latitude=lat,
+                    longitude=lng,
+                    district=f"Sample Address {lat:.5f}, {lng:.5f}",
+                    city="Tehran",
+                    country="Iran",
+                )
         except Exception as err:
             raise err
         finally:

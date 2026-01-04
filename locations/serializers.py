@@ -5,8 +5,8 @@ from .models import Location
 
 class LocationSerializer(serializers.ModelSerializer):
     # Allow writing lat/lon while keeping computed values in responses
-    latitude = serializers.FloatField(required=False, write_only=True)
-    longitude = serializers.FloatField(required=False, write_only=True)
+    latitude = serializers.FloatField(required=False, allow_null=True)
+    longitude = serializers.FloatField(required=False, allow_null=True)
     readable = serializers.SerializerMethodField()
 
     class Meta:
@@ -21,17 +21,20 @@ class LocationSerializer(serializers.ModelSerializer):
             "readable",
         ]
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        # Expose lat/lon from point in responses
-        data["latitude"] = instance.point.y if instance.point else None
-        data["longitude"] = instance.point.x if instance.point else None
+    def validate(self, data):
+        lat = data.get("latitude")
+        lon = data.get("longitude")
+        if (lat is None) ^ (lon is None):
+            raise serializers.ValidationError("Both latitude and longitude must be provided together.")
         return data
 
     def get_readable(self, obj):
-        if obj.point:
-            return f"{obj.city}, {obj.country}"
-        parts = [obj.country, obj.city]
+        parts = [obj.city, obj.country]
         if obj.district:
             parts.append(obj.district)
-        return ", ".join(parts) or "Unknown"
+        readable = ", ".join([p for p in parts if p])
+        if readable:
+            return readable
+        if obj.latitude is not None and obj.longitude is not None:
+            return f"{obj.latitude}, {obj.longitude}"
+        return "Unknown"

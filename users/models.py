@@ -3,7 +3,7 @@ from datetime import timedelta
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
-from django.contrib.gis.db import models
+from django.db import models
 from django.utils import timezone
 from locations.models import Location
 from phonenumber_field.modelfields import PhoneNumberField

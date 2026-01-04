@@ -67,7 +67,6 @@ INSTALLED_APPS = (
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
-        "django.contrib.gis",
     ]
 )
 
@@ -113,13 +112,13 @@ WSGI_APPLICATION = "petoria.wsgi.application"
 
 
 # Get database type from environment variable
-DB_TYPE = os.getenv("DB_TYPE", "spatialite").lower()
+DB_TYPE = os.getenv("DB_TYPE", "sqlite").lower()
 
-if DB_TYPE == "postgis":
-    # PostgreSQL/PostGIS configuration
+if DB_TYPE in {"postgres", "postgis"}:
+    # PostgreSQL configuration
     DATABASES = {
         "default": {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "ENGINE": "django.db.backends.postgresql",
             "NAME": os.getenv("DB_NAME", "petoria_db"),
             "USER": os.getenv("DB_USER", "postgres"),
             "PASSWORD": os.getenv("DB_PASSWORD", ""),
@@ -128,10 +127,10 @@ if DB_TYPE == "postgis":
         }
     }
 else:
-    # Spatialite configuration
+    # SQLite configuration (also used for legacy spatialite setting)
     DATABASES = {
         "default": {
-            "ENGINE": "django.contrib.gis.db.backends.spatialite",
+            "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / os.getenv("DB_NAME", "db.sqlite3"),
         }
     }
@@ -187,9 +186,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User"
-
-# GDAL_LIBRARY_PATH = '/usr/lib/x86_64-linux-gnu/libgdal.so.34'
-# GDAL_LIBRARY_PATH = "/opt/homebrew/Cellar/gdal/3.12.0/lib/libgdal.dylib"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

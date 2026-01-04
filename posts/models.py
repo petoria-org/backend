@@ -1,7 +1,7 @@
 # posts/models.py
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.gis.db import models
+from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.utils.translation import gettext_lazy as _
@@ -226,14 +226,24 @@ class BasePost(models.Model):
         #  location validation
         if isinstance(self, LostPost):
             if not self.location or not (
-                    self.location.point or self.location.city or self.location.country
+                    (
+                        self.location.latitude is not None
+                        and self.location.longitude is not None
+                    )
+                    or self.location.city
+                    or self.location.country
             ):
                 raise ValidationError(
                     "For lost pets, you must provide a location (coordinates or at least city/country)."
                 )
         elif isinstance(self, (FoundPost, SurrenderCustodyPet)):
             if self.location and not (
-                    self.location.point or self.location.city or self.location.country
+                    (
+                        self.location.latitude is not None
+                        and self.location.longitude is not None
+                    )
+                    or self.location.city
+                    or self.location.country
             ):
                 raise ValidationError(
                     "Location is incomplete. Provide city/country/coordinates or leave blank."

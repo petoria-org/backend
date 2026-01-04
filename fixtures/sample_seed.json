@@ -6,7 +6,8 @@
       "country": "ایران",
       "city": "تهران",
       "district": "تجریش",
-      "point": "SRID=4326;POINT (51.4328 35.8037)"
+      "latitude": 35.8037,
+      "longitude": 51.4328
     }
   },
   {
@@ -16,7 +17,8 @@
       "country": "ایران",
       "city": "مشهد",
       "district": "حرم امام رضا (ع)",
-      "point": "SRID=4326;POINT (59.6159 36.2880)"
+      "latitude": 36.288,
+      "longitude": 59.6159
     }
   },
   {
@@ -26,7 +28,8 @@
       "country": "ایران",
       "city": "اصفهان",
       "district": "میدان نقش جهان",
-      "point": "SRID=4326;POINT (51.6776 32.6576)"
+      "latitude": 32.6576,
+      "longitude": 51.6776
     }
   },
   {
@@ -36,7 +39,8 @@
       "country": "ایران",
       "city": "شیراز",
       "district": "حافظیه",
-      "point": "SRID=4326;POINT (52.5714 29.6309)"
+      "latitude": 29.6309,
+      "longitude": 52.5714
     }
   },
   {
@@ -46,7 +50,8 @@
       "country": "ایران",
       "city": "تبریز",
       "district": "بازار تاریخی تبریز",
-      "point": "SRID=4326;POINT (46.2886 38.0814)"
+      "latitude": 38.0814,
+      "longitude": 46.2886
     }
   },
   {
@@ -56,7 +61,8 @@
       "country": "ایران",
       "city": "کرج",
       "district": "مهرشهر",
-      "point": "SRID=4326;POINT (51.0225 35.7854)"
+      "latitude": 35.7854,
+      "longitude": 51.0225
     }
   },
   {
@@ -66,7 +72,8 @@
       "country": "ایران",
       "city": "قم",
       "district": "حرم حضرت معصومه (س)",
-      "point": "SRID=4326;POINT (51.0763 34.6411)"
+      "latitude": 34.6411,
+      "longitude": 51.0763
     }
   },
   {
@@ -76,7 +83,8 @@
       "country": "ایران",
       "city": "اهواز",
       "district": "کیانپارس",
-      "point": "SRID=4326;POINT (48.6954 31.3529)"
+      "latitude": 31.3529,
+      "longitude": 48.6954
     }
   },
   {
@@ -86,7 +94,8 @@
       "country": "ایران",
       "city": "کرمانشاه",
       "district": "طاق بستان",
-      "point": "SRID=4326;POINT (47.1307 34.3874)"
+      "latitude": 34.3874,
+      "longitude": 47.1307
     }
   },
   {
@@ -96,7 +105,8 @@
       "country": "ایران",
       "city": "رشت",
       "district": "میدان شهرداری",
-      "point": "SRID=4326;POINT (49.5832 37.2815)"
+      "latitude": 37.2815,
+      "longitude": 49.5832
     }
   },
   {
@@ -106,7 +116,8 @@
       "country": "ایران",
       "city": "یزد",
       "district": "میدان امیر چخماق",
-      "point": "SRID=4326;POINT (54.3701 31.8967)"
+      "latitude": 31.8967,
+      "longitude": 54.3701
     }
   },
   {
@@ -116,7 +127,8 @@
       "country": "ایران",
       "city": "اردبیل",
       "district": "مقبره شیخ صفی الدین",
-      "point": "SRID=4326;POINT (48.2917 38.2489)"
+      "latitude": 38.2489,
+      "longitude": 48.2917
     }
   },
   {
@@ -126,7 +138,8 @@
       "country": "ایران",
       "city": "بندر عباس",
       "district": "بازار سنتی",
-      "point": "SRID=4326;POINT (56.2800 27.1860)"
+      "latitude": 27.186,
+      "longitude": 56.28
     }
   },
   {
@@ -136,7 +149,8 @@
       "country": "ایران",
       "city": "همدان",
       "district": "گنبد علویان",
-      "point": "SRID=4326;POINT (48.5150 34.7989)"
+      "latitude": 34.7989,
+      "longitude": 48.515
     }
   },
   {
@@ -146,7 +160,8 @@
       "country": "ایران",
       "city": "کاشان",
       "district": "باغ فین",
-      "point": "SRID=4326;POINT (51.3726 33.9467)"
+      "latitude": 33.9467,
+      "longitude": 51.3726
     }
   },
   {
@@ -156,7 +171,8 @@
       "country": "ایران",
       "city": "قزوین",
       "district": "میدان آزادی",
-      "point": "SRID=4326;POINT (50.0059 36.2739)"
+      "latitude": 36.2739,
+      "longitude": 50.0059
     }
   },
   {
@@ -166,7 +182,8 @@
       "country": "ایران",
       "city": "ساری",
       "district": "میدان امام",
-      "point": "SRID=4326;POINT (53.0601 36.5633)"
+      "latitude": 36.5633,
+      "longitude": 53.0601
     }
   },
   {
@@ -176,7 +193,8 @@
       "country": "ایران",
       "city": "ارومیه",
       "district": "پارک گلستان",
-      "point": "SRID=4326;POINT (45.0728 37.5528)"
+      "latitude": 37.5528,
+      "longitude": 45.0728
     }
   },
   {
@@ -186,7 +204,8 @@
       "country": "ایران",
       "city": "زاهدان",
       "district": "خیابان دانشگاه",
-      "point": "SRID=4326;POINT (60.8599 29.4963)"
+      "latitude": 29.4963,
+      "longitude": 60.8599
     }
   },
   {
@@ -196,7 +215,8 @@
       "country": "ایران",
       "city": "سنندج",
       "district": "میدان آزادی",
-      "point": "SRID=4326;POINT (47.0022 35.3142)"
+      "latitude": 35.3142,
+      "longitude": 47.0022
     }
   },
   {
@@ -206,7 +226,8 @@
       "country": "ایران",
       "city": "بجنورد",
       "district": "میدان شهید",
-      "point": "SRID=4326;POINT (57.3290 37.4750)"
+      "latitude": 37.475,
+      "longitude": 57.329
     }
   },
   {
@@ -216,7 +237,8 @@
       "country": "ایران",
       "city": "خرم‌آباد",
       "district": "قلعه فلک‌الافلاک",
-      "point": "SRID=4326;POINT (48.3499 33.4860)"
+      "latitude": 33.486,
+      "longitude": 48.3499
     }
   },
   {
@@ -226,7 +248,8 @@
       "country": "ایران",
       "city": "زنجان",
       "district": "سبزه میدان",
-      "point": "SRID=4326;POINT (48.5056 36.6689)"
+      "latitude": 36.6689,
+      "longitude": 48.5056
     }
   },
   {
@@ -236,7 +259,8 @@
       "country": "ایران",
       "city": "بیرجند",
       "district": "مصلی",
-      "point": "SRID=4326;POINT (59.2100 32.8649)"
+      "latitude": 32.8649,
+      "longitude": 59.21
     }
   },
   {
@@ -246,7 +270,8 @@
       "country": "ایران",
       "city": "بوشهر",
       "district": "ساحل دریا",
-      "point": "SRID=4326;POINT (50.8385 28.9234)"
+      "latitude": 28.9234,
+      "longitude": 50.8385
     }
   },
   {
@@ -256,7 +281,8 @@
       "country": "ایران",
       "city": "بندر انزلی",
       "district": "بلوار ساحلی",
-      "point": "SRID=4326;POINT (49.4680 37.4747)"
+      "latitude": 37.4747,
+      "longitude": 49.468
     }
   },
   {
@@ -266,7 +292,8 @@
       "country": "ایران",
       "city": "کرمان",
       "district": "باغ فتح‌آباد",
-      "point": "SRID=4326;POINT (57.0788 30.2839)"
+      "latitude": 30.2839,
+      "longitude": 57.0788
     }
   },
   {
@@ -276,7 +303,8 @@
       "country": "ایران",
       "city": "اراک",
       "district": "میدان شهر",
-      "point": "SRID=4326;POINT (49.6922 34.0940)"
+      "latitude": 34.094,
+      "longitude": 49.6922
     }
   },
   {
@@ -286,7 +314,8 @@
       "country": "ایران",
       "city": "گرگان",
       "district": "ناهارخوران",
-      "point": "SRID=4326;POINT (54.4347 36.7554)"
+      "latitude": 36.7554,
+      "longitude": 54.4347
     }
   },
   {
@@ -296,7 +325,8 @@
       "country": "ایران",
       "city": "قشم",
       "district": "بازار درگهان",
-      "point": "SRID=4326;POINT (55.8911 26.6961)"
+      "latitude": 26.6961,
+      "longitude": 55.8911
     }
   },
   {
