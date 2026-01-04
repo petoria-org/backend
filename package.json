@@ -1,7 +1,7 @@
 {
-  "system_packages": [
-    "gdal-bin",
-    "libgdal-dev",
-    "python3-gdal"
-  ]
+  "dependencies": {
+    "gdal": "3.4.3",
+    "gdal-wheels": "latest"
+  }
 }
+
