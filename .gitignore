@@ -6,7 +6,6 @@ migrations
 # Environment
 *venv*
 .vscode
-*.env
 media
 
 # Database
