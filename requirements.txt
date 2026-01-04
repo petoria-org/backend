@@ -23,6 +23,7 @@ django-phonenumber-field==8.3.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 Faker==38.2.0
+gdal=3.12.1
 google==3.0.0
 google-auth==2.45.0
 hyperlink==21.0.0
