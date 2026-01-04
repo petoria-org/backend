@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "gdal": "3.12.1",
-    "gdal-wheels": "latest"
-  }
-}
-
