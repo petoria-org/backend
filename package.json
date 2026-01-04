@@ -1,5 +1,6 @@
 {
   "apt": [
+    "gdal-config ",
     "gdal-bin",
     "libgdal-dev",
     "build-essential",
