@@ -1,0 +1,9 @@
+{
+  "app": "petoria-back",
+  "port": 80,
+  "build": {
+    "location": "iran"
+  },
+  "apt": { "packages": ["gdal-bin"] },
+  "disks": []
+}
