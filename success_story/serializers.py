@@ -30,6 +30,7 @@ class SuccessStorySerializer(serializers.ModelSerializer):
             "user_id",
             "user_name",
             "story_type",
+            "pet_type",
             "title",
             "story",
             "image_ids",
@@ -110,7 +111,7 @@ class SuccessStoryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SuccessStory
-        fields = ["id", "user_name", "title", "story_type", "story", "image", "created_at"]
+        fields = ["id", "user_name", "title", "story_type", "pet_type", "story", "image", "created_at"]
 
     def get_image(self, obj):
         first = obj.images.first()

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from users.models import User
+from posts.enums import PetType
 
 
 class SuccessStory(models.Model):
@@ -30,6 +31,13 @@ class SuccessStory(models.Model):
         choices=STORY_TYPE_CHOICES
 
     )
+
+    pet_type = models.CharField(
+        max_length=20,
+        choices=PetType.choices,
+        default=PetType.OTHERS,
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # image
