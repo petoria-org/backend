@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables
-if os.getenv("LOAD_DOTENV", "false").lower() == "true":
-    load_dotenv(BASE_DIR / "example.env")
+load_dotenv(BASE_DIR.joinpath("example.env"))
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -29,13 +29,10 @@ if os.getenv("LOAD_DOTENV", "false").lower() == "true":
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-_hosts = os.getenv("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()]
+DEBUG = True
 
-# CSRF trusted origins for HTTPS deployments (comma-separated)
-_csrf = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf.split(",") if o.strip()]
+ALLOWED_HOSTS = []
+
 
 # Application definition:
 #   Intentions for the following separation: to be
@@ -76,7 +73,6 @@ INSTALLED_APPS = (
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -139,28 +135,14 @@ else:
         }
     }
 
-
-# Channels / Redis configuration
-REDIS_URL = (
-    os.getenv("REDIS_URL")
-    or os.getenv("LIARA_REDIS_URL")
-    or os.getenv("REDIS_TLS_URL")
-)
-
-if REDIS_URL:
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {"hosts": [REDIS_URL]},
-        }
-    }
-else:
-    # Local/dev fallback (no Redis)
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels.layers.InMemoryChannelLayer"
-        }
-    }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis server address
+        },
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -193,10 +175,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+STATIC_URL = "static/"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -246,10 +226,9 @@ DEFAULT_FROM_EMAIL = os.getenv(
     EMAIL_HOST_USER or "noreply@yourdomain.com",
 )
 
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://petoria-front.liara.run",
 ]

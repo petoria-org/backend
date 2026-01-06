@@ -1,6 +1,6 @@
-pip==25.3
 asgiref==3.10.0
 attrs==25.4.0
+autobahn==25.10.2
 Automat==25.4.16
 beautifulsoup4==4.14.3
 cachetools==6.2.4
@@ -52,4 +52,5 @@ txaio==25.9.2
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.6.0
+whitenoise==6.11.0
 zope.interface==8.1
