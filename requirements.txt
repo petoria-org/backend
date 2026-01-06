@@ -1,6 +1,6 @@
 asgiref==3.10.0
 attrs==25.4.0
-autobahn==25.10.2
+autobahn==23.6.2
 Automat==25.4.16
 beautifulsoup4==4.14.3
 cachetools==6.2.4
