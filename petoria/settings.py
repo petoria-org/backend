@@ -109,7 +109,6 @@ CACHES = {
 }
 
 ASGI_APPLICATION = "petoria.asgi.application"
-WSGI_APPLICATION = "petoria.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
