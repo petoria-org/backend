@@ -162,6 +162,9 @@ else:
         }
     }
 
+print("REDIS_URL USED:", REDIS_URL)
+print("CHANNEL_LAYERS:", CHANNEL_LAYERS)
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
